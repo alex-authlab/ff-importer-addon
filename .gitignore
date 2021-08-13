@@ -1,0 +1,5 @@
+
+*.xml
+.DS_Store
+.distignore
+.idea/ff-importer-addon.iml
