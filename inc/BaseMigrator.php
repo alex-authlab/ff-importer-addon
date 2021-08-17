@@ -21,9 +21,10 @@ abstract class BaseMigrator
     {
         new CalderaMigrator();
         new NinjaFormsMigrator();
+        new GravityFormsMigrator();
 
         $type = sanitize_text_field($_REQUEST['type']);
-        $migrators = ['caldera', 'ninja_forms'];
+        $migrators = ['caldera', 'ninja_forms','gravityform'];
         if (!$type || !in_array($type, $migrators)) {
             wp_send_json_error([
                 'message' => __("Error. Unsupported migration", 'fluentform')
@@ -70,9 +71,9 @@ abstract class BaseMigrator
                     $form = [
                         'title' => $this->getFormName($formItem),
                         'form_fields' => $formFields,
-                        'status' => 'published', //todo
-                        'has_payment' => 0, //todo
-                        'type' => 'form', //todo
+                        'status' => 'published',
+                        'has_payment' => 0,
+                        'type' => 'form',
                         'created_by' => get_current_user_id()
                     ];
                     $form['conditions'] = ''; //todo
@@ -156,6 +157,9 @@ abstract class BaseMigrator
             'prefix' => '',
             'suffix' => '',
             'layout_class' => '',
+            'input_name_args'=>'',
+            'is_time_enabled'=>'',
+            'address_args'=>''
         ];
 
         $args = wp_parse_args($args, $defaults);
@@ -164,7 +168,117 @@ abstract class BaseMigrator
 
     public static function defaultFieldConfig($args)
     {
-        return [
+        $defaultElements = [
+            'input_name' => [
+                'index' => $args['index'],
+                'element' => 'input_name',
+                'attributes' => [
+                    'name' => $args['name'],
+                    'data-type' => 'name-element'
+                ],
+                'settings' => [
+                    'container_class' => '',
+                    'admin_field_label' => 'Name',
+                    'conditional_logics' => [],
+                    'label_placement' => 'top'
+                ],
+                'fields' => [
+                    'first_name' => [
+                        'element' => 'input_text',
+                        'attributes' => [
+                            'type' => 'text',
+                            'name' => ArrayHelper::get($args,'input_name_args.first_name.name') ,
+                            'value' => '',
+                            'id' => '',
+                            'class' => '',
+                            'placeholder' => __('First Name', 'fluentform'),
+                            'maxlength' => '',
+                        ],
+                        'settings' => [
+                            'container_class' => '',
+                            'label' =>  ArrayHelper::get($args,'input_name_args.first_name.label') ,
+                            'help_message' => '',
+                            'visible' =>  ArrayHelper::get($args,'input_name_args.first_name.visible'),
+                            'validation_rules' => [
+                                'required' => [
+                                    'value' => false,
+                                    'message' => __('This field is required', 'fluentform'),
+                                ],
+                            ],
+                            'conditional_logics' => [],
+                        ],
+                        'editor_options' => [
+                            'template' => 'inputText'
+                        ],
+                    ],
+                    'middle_name' => [
+                        'element' => 'input_text',
+                        'attributes' => [
+                            'type' => 'text',
+                            'name' =>  ArrayHelper::get($args,'input_name_args.middle_name.name') ,
+                            'value' => '',
+                            'id' => '',
+                            'class' => '',
+                            'placeholder' => __('Middle Name', 'fluentform'),
+                            'required' => false,
+                            'maxlength' => '',
+                        ],
+                        'settings' => [
+                            'container_class' => '',
+                            'label' =>  ArrayHelper::get($args,'input_name_args.middle_name.label'),
+                            'help_message' => '',
+                            'error_message' => '',
+                            'visible' => ArrayHelper::get($args,'input_name_args.middle_name.visible'),
+                            'validation_rules' => [
+                                'required' => [
+                                    'value' => false,
+                                    'message' => __('This field is required', 'fluentform'),
+                                ],
+                            ],
+                            'conditional_logics' => [],
+                        ],
+                        'editor_options' => [
+                            'template' => 'inputText'
+                        ],
+                    ],
+                    'last_name' => [
+                        'element' => 'input_text',
+                        'attributes' => [
+                            'type' => 'text',
+                            'name' =>  ArrayHelper::get($args,'input_name_args.last_name.name'),
+                            'value' => '',
+                            'id' => '',
+                            'class' => '',
+                            'placeholder' => __('Last Name', 'fluentform'),
+                            'required' => false,
+                            'maxlength' => '',
+                        ],
+                        'settings' => [
+                            'container_class' => '',
+                            'label' =>  ArrayHelper::get($args,'input_name_args.last_name.label'),
+                            'help_message' => '',
+                            'error_message' => '',
+                            'visible' =>  ArrayHelper::get($args,'input_name_args.last_name.visible'),
+                            'validation_rules' => [
+                                'required' => [
+                                    'value' => false,
+                                    'message' => __('This field is required', 'fluentform'),
+                                ],
+                            ],
+                            'conditional_logics' => [],
+                        ],
+                        'editor_options' => [
+                            'template' => 'inputText'
+                        ],
+                    ],
+                ],
+                'editor_options' => [
+                    'title' => 'Name Fields',
+                    'element' => 'name-fields',
+                    'icon_class' => 'ff-edit-name',
+                    'template' => 'nameFields'
+                ],
+            ],
             'input_text' => [
                 'index' => $args['index'],
                 'element' => 'input_text',
@@ -332,7 +446,7 @@ abstract class BaseMigrator
                     'placeholder' => $args['placeholder'],
                     'rows' => 3,
                     'cols' => 2,
-                    'maxlength' => '',
+                    'maxlength' => $args['maxlength'],
                 ],
                 'settings' => [
                     'container_class' => '',
@@ -520,6 +634,7 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
                     'date_format' => $args['format'],
+                    'is_time_enabled' => $args['is_time_enabled'],
                     'validation_rules' => [
                         'required' => [
                             'value' => $args['required'],
@@ -559,7 +674,7 @@ abstract class BaseMigrator
                     'data-clear-if-not-match' => 'no',
                     'validation_rules' => [
                         'required' => [
-                            'value' => false,
+                            'value' => $args['required'],
                             'message' => __('This field is required', 'fluentform'),
                         ]
                     ],
@@ -845,18 +960,18 @@ abstract class BaseMigrator
                 'element' => 'form_step',
                 'attributes' => [
                     'id' => '',
-                    'class' => '',
+                    'class' => $args['class'],
                 ],
                 'settings' => [
                     'prev_btn' => [
-                        'type' => 'default',
-                        'text' => 'Previous',
-                        'img_url' => ''
+                        'type' => ArrayHelper::get($args,'prev_btn.type','default'),
+                        'text' => ArrayHelper::get($args,'prev_btn.text','Previous') ,
+                        'img_url' => ArrayHelper::get($args,'prev_btn.img_url','')
                     ],
                     'next_btn' => [
-                        'type' => 'default',
-                        'text' => $args['label'],
-                        'img_url' => ''
+                        'type' => ArrayHelper::get($args,'next_btn.type','default'),
+                        'text' => ArrayHelper::get($args,'next_btn.text','Next') ,
+                        'img_url' => ArrayHelper::get($args,'next_btn.img_url','')
                     ]
                 ],
                 'editor_options' => [
@@ -948,8 +1063,251 @@ abstract class BaseMigrator
                 ],
                 'uniqElKey' => $args['uniqElKey'],
             ],
+            'terms_and_condition' => [
+                'index' => $args['index'],
+                'element' => 'terms_and_condition',
+                'attributes' => [
+                    'type' => 'checkbox',
+                    'name' => $args['name'],
+                    'value' => false,
+                    'class' => $args['class'],
+                ],
+                'settings' => [
+                    'tnc_html' => $args['tnc_html'],
+                    'has_checkbox' => true,
+                    'admin_field_label' => __('Terms and Conditions', 'fluentform'),
+                    'container_class' => '',
+                    'validation_rules' => [
+                        'required' => [
+                            'value' => $args['required'],
+                            'message' => __('This field is required', 'fluentform'),
+                        ],
+                    ],
+                    'conditional_logics' => [],
+                ],
+                'editor_options' => [
+                    'title' => __('Terms & Conditions', 'fluentform'),
+                    'icon_class' => 'ff-edit-terms-condition',
+                    'template' => 'termsCheckbox'
+                ],
+            ],
+            'address' => [
+                'index' => $args['index'],
+                'element' => 'address',
+                'attributes' => [
+                    'id' => '',
+                    'class' => $args['class'],
+                    'name' => $args['name'],
+                    'data-type' => 'address-element'
+                ],
+                'settings' => [
+                    'label' => $args['label'],
+                    'admin_field_label' => 'Address',
+                    'conditional_logics' => [],
+                ],
+                'fields' => [
+                    'address_line_1' => [
+                        'element' => 'input_text',
+                        'attributes' => [
+                            'type' => 'text',
+                            'name' => ArrayHelper::get($args,'address_args.address_line_1.name'),
+                            'value' => '',
+                            'id' => '',
+                            'class' => '',
+                            'placeholder' => __('Address Line 1', 'fluentform'),
+                        ],
+                        'settings' => [
+                            'container_class' => '',
+                            'label' => ArrayHelper::get($args,'address_args.address_line_1.label'),
+                            'admin_field_label' => '',
+                            'help_message' => '',
+                            'visible' => ArrayHelper::get($args,'address_args.address_line_1.visible'),
+                            'validation_rules' => [
+                                'required' => [
+                                    'value' => false,
+                                    'message' => __('This field is required', 'fluentform'),
+                                ],
+                            ],
+                            'conditional_logics' => [],
+                        ],
+                        'editor_options' => [
+                            'template' => 'inputText'
+                        ],
+                    ],
+                    'address_line_2' => [
+                        'element' => 'input_text',
+                        'attributes' => [
+                            'type' => 'text',
+                            'name' => ArrayHelper::get($args,'address_args.address_line_2.name'),
+                            'value' => '',
+                            'id' => '',
+                            'class' => '',
+                            'placeholder' => __('Address Line 2', 'fluentform'),
+                        ],
+                        'settings' => [
+                            'container_class' => '',
+                            'label' => ArrayHelper::get($args,'address_args.address_line_2.label'),
+                            'admin_field_label' => '',
+                            'help_message' => '',
+                            'visible' => ArrayHelper::get($args,'address_args.address_line_2.visible'),
+                            'validation_rules' => [
+                                'required' => [
+                                    'value' => false,
+                                    'message' => __('This field is required', 'fluentform'),
+                                ],
+                            ],
+                            'conditional_logics' => [],
+                        ],
+                        'editor_options' => [
+                            'template' => 'inputText'
+                        ],
+                    ],
+                    'city' => [
+                        'element' => 'input_text',
+                        'attributes' => [
+                            'type' => 'text',
+                            'name' => ArrayHelper::get($args,'address_args.city.name'),
+                            'value' => '',
+                            'id' => '',
+                            'class' => '',
+                            'placeholder' => __('City', 'fluentform'),
+                        ],
+                        'settings' => [
+                            'container_class' => '',
+                            'label' => ArrayHelper::get($args,'address_args.city.label'),
+                            'admin_field_label' => '',
+                            'help_message' => '',
+                            'error_message' => '',
+                            'visible' => ArrayHelper::get($args,'address_args.city.visible'),
+                            'validation_rules' => [
+                                'required' => [
+                                    'value' => false,
+                                    'message' => __('This field is required', 'fluentform'),
+                                ],
+                            ],
+                            'conditional_logics' => [],
+                        ],
+                        'editor_options' => [
+                            'template' => 'inputText'
+                        ],
+                    ],
+                    'state' => [
+                        'element' => 'input_text',
+                        'attributes' => [
+                            'type' => 'text',
+                            'name' => ArrayHelper::get($args,'address_args.state.state'),
+                            'value' => '',
+                            'id' => '',
+                            'class' => '',
+                            'placeholder' => __('State', 'fluentform'),
+                        ],
+                        'settings' => [
+                            'container_class' => '',
+                            'label' => ArrayHelper::get($args,'address_args.state.label'),
+                            'admin_field_label' => '',
+                            'help_message' => '',
+                            'error_message' => '',
+                            'visible' => ArrayHelper::get($args,'address_args.state.visible'),
+                            'validation_rules' => [
+                                'required' => [
+                                    'value' => false,
+                                    'message' => __('This field is required', 'fluentform'),
+                                ],
+                            ],
+                            'conditional_logics' => [],
+                        ],
+                        'editor_options' => [
+                            'template' => 'inputText'
+                        ],
+                    ],
+                    'zip' => [
+                        'element' => 'input_text',
+                        'attributes' => [
+                            'type' => 'text',
+                            'name' => ArrayHelper::get($args,'address_args.zip.name'),
+                            'value' => '',
+                            'id' => '',
+                            'class' => '',
+                            'placeholder' => __('Zip', 'fluentform'),
+                            'required' => false,
+                        ],
+                        'settings' => [
+                            'container_class' => '',
+                            'label' => ArrayHelper::get($args,'address_args.zip.label'),
+                            'admin_field_label' => '',
+                            'help_message' => '',
+                            'error_message' => '',
+                            'visible' => ArrayHelper::get($args,'address_args.zip.visible'),
+                            'validation_rules' => [
+                                'required' => [
+                                    'value' => false,
+                                    'message' => __('This field is required', 'fluentform'),
+                                ],
+                            ],
+                            'conditional_logics' => [],
+                        ],
+                        'editor_options' => [
+                            'template' => 'inputText'
+                        ],
+                    ],
+                    'country' => [
+                        'element' => 'select_country',
+                        'attributes' => [
+                            'name' => ArrayHelper::get($args,'address_args.country.name'),
+                            'value' => '',
+                            'id' => '',
+                            'class' => '',
+                            'placeholder' => __('Select Country', 'fluentform'),
+                            'required' => false,
+                        ],
+                        'settings' => [
+                            'container_class' => '',
+                            'label' => ArrayHelper::get($args,'address_args.country.label'),
+                            'admin_field_label' => '',
+                            'help_message' => '',
+                            'error_message' => '',
+                            'visible' => ArrayHelper::get($args,'address_args.country.visible'),
+                            'validation_rules' => [
+                                'required' => [
+                                    'value' => false,
+                                    'message' => __('This field is required', 'fluentform'),
+                                ],
+                            ],
+                            'country_list' => [
+                                'active_list' => 'all',
+                                'visible_list' => [],
+                                'hidden_list' => [],
+                            ],
+                            'conditional_logics' => [],
+                        ],
+                        'options' => [
+                            'US' => 'US of America',
+                            'UK' => 'United Kingdom'
+                        ],
+                        'editor_options' => [
+                            'title' => 'Country List',
+                            'element' => 'country-list',
+                            'icon_class' => 'icon-text-width',
+                            'template' => 'selectCountry'
+                        ],
+                    ],
+                ],
+                'editor_options' => [
+                    'title' => __('Address Fields', 'fluentform'),
+                    'element' => 'address-fields',
+                    'icon_class' => 'ff-edit-address',
+                    'template' => 'addressFields'
+                ],
+            ],
 
         ];
+        if (!defined('FLUENTFORMPRO')) {
+            $proElements = ['repeater_field','rangeslider','color_picker','form_step','phone','input_file'];
+            foreach ($proElements as $el){
+                unset($defaultElements[$el]);
+            }
+        }
+        return $defaultElements;
     }
 
     public function getSubmitBttn($args)
@@ -969,9 +1327,9 @@ abstract class BaseMigrator
                 'color' => '#ffffff',
                 'background_color' => '#409EFF',
                 'button_ui' => [
-                    'type' => 'default',
+                    'type' => ArrayHelper::get($args,'type','default'),
                     'text' => $args['label'],
-                    'img_url' => ''
+                    'img_url' => ArrayHelper::get($args,'img_url','')
                 ],
                 'normal_styles' => [],
                 'hover_styles' => [],

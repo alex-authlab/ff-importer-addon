@@ -171,9 +171,7 @@ class NinjaFormsMigrator extends BaseMigrator
                 }
                 $args['fields'] = $arr;
                 return array('repeater_field', $args);
-                break;
             case 'submit':
-
                 $this->submitBtn = $this->getSubmitBttn(
                     [
                         'uniqElKey' => $field['key'],

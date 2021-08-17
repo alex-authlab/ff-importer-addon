@@ -1,8 +1,8 @@
 <?php
 
 
-use \FluentForm\App\Modules\Form\Form;
-use \FluentForm\Framework\Helpers\ArrayHelper;
+use FluentForm\App\Modules\Form\Form;
+use FluentForm\Framework\Helpers\ArrayHelper;
 
 class CalderaMigrator extends BaseMigrator
 {
@@ -143,7 +143,7 @@ class CalderaMigrator extends BaseMigrator
             'fields' => $this->getContainer($form, $fluentFields),
             'submitButton' => $this->submitBtn
         ];
-        if ($hasStep) {
+        if ($hasStep && defined('FLUENTFORMPRO')) {
             $returnData['stepsWrapper'] = $this->getStepWrapper();
         }
         return $returnData;
@@ -164,7 +164,7 @@ class CalderaMigrator extends BaseMigrator
             'url' => 'input_url',
             'color_picker' => 'color_picker',
             'phone_better' => 'phone',
-            'phone' => 'input_mask',
+            'phone' => 'input_phone',
             'select' => 'select',
             'dropdown' => 'select',
             'filtered_select2' => 'select',
@@ -379,7 +379,7 @@ class CalderaMigrator extends BaseMigrator
                 'subject' => ArrayHelper::get($form, 'mailer.email_subject', 'Admin Notification'),
                 'to' => ArrayHelper::get($form, 'mailer.recipients', '{wp.admin_email}'),
                 'replyTo' => '{wp.admin_email}',
-                'message' => str_replace('{summary}','{all_data}',ArrayHelper::get($form, 'mailer.email_message') ),
+                'message' => str_replace('{summary}', '{all_data}', ArrayHelper::get($form, 'mailer.email_message')),
                 'fromName' => ArrayHelper::get($form, 'mailer.sender_name'),
                 'fromAddress' => ArrayHelper::get($form, 'mailer.sender_email'),
                 'bcc' => ArrayHelper::get($form, 'mailer.bcc_to'),

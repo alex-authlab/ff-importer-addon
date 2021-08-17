@@ -28,6 +28,7 @@ Class Bootstrap
         require_once FF_MIG_DIR_PATH . 'inc/BaseMigrator.php';
         require_once FF_MIG_DIR_PATH . 'inc/CalderaMigrator.php';
         require_once FF_MIG_DIR_PATH . 'inc/NinjaFormsMigrator.php';
+        require_once FF_MIG_DIR_PATH . 'inc/GravityFormsMigrator.php';
     }
 
     public function render()
@@ -44,6 +45,12 @@ Class Bootstrap
             $migratorLinks[] = [
                 'name' => 'Import Ninja Forms',
                 'key' => 'ninja_forms'
+            ];
+        }
+        if ((new GravityFormsMigrator())->exist()) {
+            $migratorLinks[] = [
+                'name' => 'Import Gravity Forms',
+                'key' => 'gravityform'
             ];
         }
         $this->migratorLinks = $migratorLinks;
