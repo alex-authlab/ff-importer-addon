@@ -12,7 +12,7 @@
  * @wordpress-plugin
  * Plugin Name:       FF Importer
  * Plugin URI:        #
- * Description:       One click Import caldera ,ninja forms into fluentforms. Go to Fluentforms > Tools and click import
+ * Description:       One click Import Caldera, Ninja Forms & Gravity Forms into Fluentforms. Go to Fluentforms > Tools and click import
  * Version:           1.0
  * Author:            #
  * Author URI:       #

@@ -138,6 +138,10 @@ class GravityFormsMigrator extends BaseMigrator
                 $args['html_codes'] = $field['content'];
                 break;
 
+            case 'section_break':
+                $args['section_break_desc'] = $field['description'];
+                break;
+
             case 'terms_and_condition':
                 $args['tnc_html'] = $field['description'];
                 break;
