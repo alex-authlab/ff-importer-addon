@@ -11,7 +11,7 @@ class GravityFormsMigrator extends BaseMigrator
     {
         $this->key = 'gravityform';
         $this->title = 'Gravity Forms';
-        $this->shortcode = 'caldera_form';
+        $this->shortcode = 'gravity_form';
         $this->hasStep = false;
         parent::__construct();
     }
@@ -137,11 +137,9 @@ class GravityFormsMigrator extends BaseMigrator
             case 'custom_html':
                 $args['html_codes'] = $field['content'];
                 break;
-
             case 'section_break':
                 $args['section_break_desc'] = $field['description'];
                 break;
-
             case 'terms_and_condition':
                 $args['tnc_html'] = $field['description'];
                 break;
