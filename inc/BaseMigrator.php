@@ -451,7 +451,7 @@ abstract class BaseMigrator
                 'settings' => [
                     'container_class' => '',
                     'label' => $args['label'],
-                    'label_placement' => '',
+                    'label_placement' => $args['label_placement'],
                     'admin_field_label' => $args['admin_field_label'],
                     'help_message' => $args['help_message'],
                     'conditional_logics' => [],
@@ -905,7 +905,7 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'show_text' => 'no',
                     'help_message' => $args['help_message'],
-                    'label_placement' => '',
+                    'label_placement' => $args['label_placement'],
                     'admin_field_label' => $args['admin_field_label'],
                     'container_class' => '',
                     'conditional_logics' => [],
