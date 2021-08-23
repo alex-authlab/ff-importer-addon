@@ -38,7 +38,9 @@ class GravityFormsMigrator extends BaseMigrator
             }
         }
 
-        //dd($fields);
+        $test = ArrayHelper::get($field, 'maxFileSize');
+
+        //dd(gettype($test));
         //dd($this->formatFieldData($field));
 
         $submitBtn = $this->getSubmitBttn([

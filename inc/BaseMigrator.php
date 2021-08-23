@@ -833,7 +833,7 @@ abstract class BaseMigrator
                     'admin_field_label' => $args['admin_field_label'],
                     'label_placement' => $args['label_placement'],
                     'btn_text' => $args['upload_btn_text'],
-                    'help_message' => '',
+                    'help_message' => $args['help_message'],
                     'validation_rules' => [
                         'required' => [
                             'value' => $args['required'],
