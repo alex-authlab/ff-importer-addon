@@ -294,8 +294,8 @@ abstract class BaseMigrator
                 'settings' => [
                     'container_class' => $args['container_class'],
                     'label' => $args['label'],
-                    'label_placement' => '',
-                    'admin_field_label' => '',
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
                     'help_message' => $args['help_message'],
                     'conditional_logics' => [],
                     'validation_rules' => [
@@ -324,7 +324,7 @@ abstract class BaseMigrator
                     'value' => $args['value'],
                 ],
                 'settings' => [
-                    'admin_field_label' => ''
+                    'admin_field_label' => $args['admin_field_label'],
                 ],
                 'editor_options' => [
                     'title' => __('Hidden Field', 'fluentform'),
@@ -374,8 +374,8 @@ abstract class BaseMigrator
                 'settings' => [
                     'container_class' => '',
                     'label' => $args['label'],
-                    'label_placement' => '',
-                    'admin_field_label' => '',
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
                     'help_message' => $args['help_message'],
                     'validation_rules' => [
                         'required' => [
@@ -411,8 +411,8 @@ abstract class BaseMigrator
                 'settings' => [
                     'container_class' => '',
                     'label' => $args['label'],
-                    'label_placement' => '',
-                    'admin_field_label' => '',
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
                     'help_message' => $args['help_message'],
                     'conditional_logics' => [],
                     'validation_rules' => [
@@ -451,8 +451,8 @@ abstract class BaseMigrator
                 'settings' => [
                     'container_class' => '',
                     'label' => $args['label'],
-                    'label_placement' => '',
-                    'admin_field_label' => '',
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
                     'help_message' => $args['help_message'],
                     'conditional_logics' => [],
                     'validation_rules' => [
@@ -480,8 +480,8 @@ abstract class BaseMigrator
                 ],
                 'settings' => [
                     'container_class' => '',
-                    'label_placement' => '',
-                    'admin_field_label' => '',
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
                     'placeholder' => $args['placeholder'],
@@ -522,8 +522,8 @@ abstract class BaseMigrator
                     'help_message' => $args['help_message'],
                     'container_class' => $args['container_class'],
                     'label' => $args['label'],
-                    'admin_field_label' => '',
-                    'label_placement' => '',
+                    'admin_field_label' => $args['admin_field_label'],
+                    'label_placement' => $args['label_placement'],
                     'placeholder' => $args['placeholder'],
                     'max_selection' => '',
                     'advanced_options' => $args['options'],
@@ -556,7 +556,7 @@ abstract class BaseMigrator
                 ],
                 'settings' => [
                     'container_class' => '',
-                    'label_placement' => '',
+                    'label_placement' => $args['label_placement'],
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
                     'advanced_options' => $args['options'],
@@ -590,8 +590,8 @@ abstract class BaseMigrator
                 'settings' => [
                     'dynamic_default_value' => '',
                     'container_class' => '',
-                    'admin_field_label' => '',
-                    'label_placement' => '',
+                    'admin_field_label' => $args['admin_field_label'],
+                    'label_placement' => $args['label_placement'],
                     'display_type' => '',
                     'randomize_options' => 'no',
                     'label' => $args['label'],
@@ -629,8 +629,8 @@ abstract class BaseMigrator
                 ],
                 'settings' => [
                     'container_class' => '',
-                    'label_placement' => '',
-                    'admin_field_label' => '',
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
                     'date_format' => $args['format'],
@@ -664,8 +664,8 @@ abstract class BaseMigrator
                 'settings' => [
                     'container_class' => '',
                     'label' => $args['label'],
-                    'label_placement' => '',
-                    'admin_field_label' => '',
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
                     'help_message' => $args['help_message'],
                     'prefix_label' => '',
                     'suffix_label' => '',
@@ -687,6 +687,38 @@ abstract class BaseMigrator
                 ],
                 'uniqElKey' => $args['uniqElKey'],
             ],
+            'input_password' => [
+                'index' => $args['index'],
+                'element' => 'input_password',
+                'attributes' => [
+                    'type' => 'password',
+                    'name' => $args['name'],
+                    'value' => $args['value'],
+                    'class' => $args['class'],
+                    'id' => $args['id'],
+                    'placeholder' => $args['placeholder'],
+                ],
+                'settings' => [
+                    'container_class' => $args['container_class'],
+                    'label' => $args['label'],
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
+                    'help_message' => $args['help_message'],
+                    'conditional_logics' => [],
+                    'validation_rules' => [
+                        'required' => [
+                            'value' => $args['required'],
+                            'message' => 'This field is required'
+                        ]
+                    ],
+                ],
+                'editor_options' => [
+                    'title' => __('Password Field', 'fluentform'),
+                    'icon_class' => 'ff-edit-password',
+                    'template' => 'inputText',
+                ],
+                'uniqElKey' => $args['uniqElKey'],
+            ],
             'input_number' => [
                 'index' => $args['index'],
                 'element' => 'input_number',
@@ -701,8 +733,8 @@ abstract class BaseMigrator
                 'settings' => [
                     'container_class' => '',
                     'label' => $args['label'],
-                    'admin_field_label' => '',
-                    'label_placement' => '',
+                    'admin_field_label' => $args['admin_field_label'],
+                    'label_placement' => $args['label_placement'],
                     'help_message' => '',
                     'number_step' => $args['step'],
                     'prefix_label' => '',
@@ -756,9 +788,9 @@ abstract class BaseMigrator
                     'int_tel_number' => 'no',
                     'auto_select_country' => 'no',
                     'label' => $args['label'],
-                    'label_placement' => '',
+                    'label_placement' => $args['label_placement'],
                     'help_message' => $args['help_message'],
-                    'admin_field_label' => '',
+                    'admin_field_label' => $args['admin_field_label'],
                     'phone_country_list' => array(
                         'active_list' => 'all',
                         'visible_list' => array(),
@@ -798,8 +830,8 @@ abstract class BaseMigrator
                 'settings' => [
                     'container_class' => '',
                     'label' => $args['label'],
-                    'admin_field_label' => '',
-                    'label_placement' => '',
+                    'admin_field_label' => $args['admin_field_label'],
+                    'label_placement' => $args['label_placement'],
                     'btn_text' => $args['upload_btn_text'],
                     'help_message' => '',
                     'validation_rules' => [
@@ -905,8 +937,8 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'show_text' => 'no',
                     'help_message' => $args['help_message'],
-                    'label_placement' => '',
-                    'admin_field_label' => '',
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
                     'container_class' => '',
                     'conditional_logics' => [],
                     'validation_rules' => [
@@ -1051,8 +1083,8 @@ abstract class BaseMigrator
                 'element' => 'recaptcha',
                 'attributes' => ['name' => 'recaptcha'],
                 'settings' => [
-                    'label' => '',
-                    'label_placement' => '',
+                    'label' => $args['label'],
+                    'label_placement' => $args['label_placement'],
                     'validation_rules' => [],
                 ],
                 'editor_options' => [

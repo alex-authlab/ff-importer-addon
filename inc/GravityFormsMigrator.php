@@ -11,7 +11,7 @@ class GravityFormsMigrator extends BaseMigrator
     {
         $this->key = 'gravityform';
         $this->title = 'Gravity Forms';
-        $this->shortcode = 'caldera_form';
+        $this->shortcode = 'gravity_form';
         $this->hasStep = false;
         parent::__construct();
     }
@@ -36,8 +36,11 @@ class GravityFormsMigrator extends BaseMigrator
             if ($value = $this->getFluentClassicField($type, $args)) {
                 $fluentFields[$field['id']] = $value;
             }
-
         }
+
+        //dd($fields);
+        //dd($this->formatFieldData($field));
+
         $submitBtn = $this->getSubmitBttn([
             'uniqElKey' => time(),
             'class' => '',
@@ -45,6 +48,7 @@ class GravityFormsMigrator extends BaseMigrator
             'type' => ArrayHelper::get($form, 'button.type') == 'text' ? 'default' : 'image',
             'img_url' => ArrayHelper::get($form, 'button.imageUrl'),
         ]);
+
         $returnData = [
             'fields' => $this->getContainer($fields, $fluentFields),
             'submitButton' => $submitBtn
@@ -53,6 +57,7 @@ class GravityFormsMigrator extends BaseMigrator
         if ($this->hasStep && defined('FLUENTFORMPRO')) {
             $returnData['stepsWrapper'] = $this->getStepWrapper();
         }
+
         return $returnData;
     }
 
@@ -63,14 +68,17 @@ class GravityFormsMigrator extends BaseMigrator
             'index' => $field['id'],
             'required' => $field['isRequired'],
             'label' => $field['label'],
-            'admin_field_label' => $field['adminLabel'],
+            'label_placement' => $this->getLabelPlacement($field),
+            'admin_field_label' => ArrayHelper::get($field, 'adminLabel'),
             'name' => $this->getInputName($field),
             'placeholder' => ArrayHelper::get($field, 'placeholder'),
             'class' => $field['cssClass'],
             'value' => ArrayHelper::get($field, 'defaultValue'),
             'help_message' => ArrayHelper::get($field, 'description'),
         ];
+        
         $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
+        
         switch ($type) {
 
             case 'input_name':
@@ -96,6 +104,9 @@ class GravityFormsMigrator extends BaseMigrator
                     $type = 'input_mask';
                     $args['temp_mask'] = 'custom';
                     $args['mask'] = $field['inputMaskValue'];
+                }
+                if (ArrayHelper::isTrue($field, 'enablePasswordInput')) {
+                    $type = 'input_password';
                 }
                 break;
             case 'address':
@@ -137,7 +148,9 @@ class GravityFormsMigrator extends BaseMigrator
             case 'custom_html':
                 $args['html_codes'] = $field['content'];
                 break;
-
+            case 'section_break':
+                $args['section_break_desc'] = $field['description'];
+                break;
             case 'terms_and_condition':
                 $args['tnc_html'] = $field['description'];
                 break;
@@ -160,6 +173,13 @@ class GravityFormsMigrator extends BaseMigrator
     private function getInputName($field)
     {
         return str_replace('-', '_', sanitize_title($field['label'] . '-' . $field['id']));
+    }
+
+    private function getLabelPlacement($field) {
+        if($field['labelPlacement'] == 'hidden_label') {
+            return 'hide_label';
+        }
+        return 'top';
     }
 
     /**
