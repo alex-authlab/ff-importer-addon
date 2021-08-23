@@ -194,7 +194,7 @@ class GravityFormsMigrator extends BaseMigrator
             'hidden' => 'input_hidden',
             'textarea' => 'input_textarea',
             'website' => 'input_url',
-            'phone' => 'input_phone',
+            'phone' => 'phone',
             'select' => 'select',
             'list' => 'repeater_field',
             'multiselect' => 'multi_select',
