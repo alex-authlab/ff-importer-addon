@@ -687,6 +687,38 @@ abstract class BaseMigrator
                 ],
                 'uniqElKey' => $args['uniqElKey'],
             ],
+            'input_password' => [
+                'index' => $args['index'],
+                'element' => 'input_password',
+                'attributes' => [
+                    'type' => 'password',
+                    'name' => $args['name'],
+                    'value' => $args['value'],
+                    'class' => $args['class'],
+                    'id' => $args['id'],
+                    'placeholder' => $args['placeholder'],
+                ],
+                'settings' => [
+                    'container_class' => $args['container_class'],
+                    'label' => $args['label'],
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
+                    'help_message' => $args['help_message'],
+                    'conditional_logics' => [],
+                    'validation_rules' => [
+                        'required' => [
+                            'value' => $args['required'],
+                            'message' => 'This field is required'
+                        ]
+                    ],
+                ],
+                'editor_options' => [
+                    'title' => __('Password Field', 'fluentform'),
+                    'icon_class' => 'ff-edit-password',
+                    'template' => 'inputText',
+                ],
+                'uniqElKey' => $args['uniqElKey'],
+            ],
             'input_number' => [
                 'index' => $args['index'],
                 'element' => 'input_number',
@@ -1051,8 +1083,8 @@ abstract class BaseMigrator
                 'element' => 'recaptcha',
                 'attributes' => ['name' => 'recaptcha'],
                 'settings' => [
-                    'label' => '',
-                    'label_placement' => '',
+                    'label' => $args['label'],
+                    'label_placement' => $args['label_placement'],
                     'validation_rules' => [],
                 ],
                 'editor_options' => [

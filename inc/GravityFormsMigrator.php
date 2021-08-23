@@ -38,7 +38,7 @@ class GravityFormsMigrator extends BaseMigrator
             }
         }
 
-        //dd($this->formatFieldData($field));
+        //dd($fields);
         //dd($this->formatFieldData($field));
 
         $submitBtn = $this->getSubmitBttn([
@@ -104,6 +104,9 @@ class GravityFormsMigrator extends BaseMigrator
                     $type = 'input_mask';
                     $args['temp_mask'] = 'custom';
                     $args['mask'] = $field['inputMaskValue'];
+                }
+                if (ArrayHelper::isTrue($field, 'enablePasswordInput')) {
+                    $type = 'input_password';
                 }
                 break;
             case 'address':
@@ -176,7 +179,7 @@ class GravityFormsMigrator extends BaseMigrator
         if($field['labelPlacement'] == 'hidden_label') {
             return 'hide_label';
         }
-        return;
+        return 'top';
     }
 
     /**
