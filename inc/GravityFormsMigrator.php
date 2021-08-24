@@ -38,7 +38,7 @@ class GravityFormsMigrator extends BaseMigrator
             }
         }
 
-        //dd($this->getFileTypes($field));
+        //dd($this->getFluentClassicField($type, $args));
         //dd($this->formatFieldData($field));
 
         $submitBtn = $this->getSubmitBttn([
@@ -140,9 +140,11 @@ class GravityFormsMigrator extends BaseMigrator
             case 'input_file':
                 $args['allowed_file_types'] = $this->getFileTypes($field);
                 $args['max_size_unit'] = 'MB';
-                $args['max_file_size'] = ArrayHelper::get($field, 'maxFileSize', 10);
+                $fileSizeByte = ArrayHelper::get($field, 'maxFileSize', 10);
+                $fileSizeMB = ceil($fileSizeByte * 1048576);  // 1MB = 1048576 Bytes
+                $args['max_file_size'] = $fileSizeMB;
                 $args['max_file_count'] = ArrayHelper::isTrue($field,
-                    'multipleFiles') ? 5 : 1; //limit 5 for unlimited files
+                    'multipleFiles') ? $field['maxFiles'] : 1; 
                 $args['upload_btn_text'] = 'File Upload';
                 break;
             case 'custom_html':
