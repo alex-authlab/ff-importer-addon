@@ -139,9 +139,7 @@ class GravityFormsMigrator extends BaseMigrator
             case 'input_file':
                 $args['allowed_file_types'] = $this->getFileTypes($field, 'allowedExtensions');
                 $args['max_size_unit'] = 'MB';
-                $fileSizeByte = ArrayHelper::get($field, 'maxFileSize', 10);
-                $fileSizeMB = ceil($fileSizeByte * 1048576);  // 1MB = 1048576 Bytes
-                $args['max_file_size'] = $fileSizeMB;
+                $args['max_file_size'] = $this->getFileSize($field);;
                 $args['max_file_count'] = ArrayHelper::isTrue($field,
                     'multipleFiles') ? $field['maxFiles'] : 1; 
                 $args['upload_btn_text'] = 'File Upload';
@@ -181,6 +179,17 @@ class GravityFormsMigrator extends BaseMigrator
             return 'hide_label';
         }
         return 'top';
+    }
+
+    /**
+     * @param $field
+     * @return filesize in MB
+     */
+    private function getFileSize($field) {
+        $fileSizeByte = ArrayHelper::get($field, 'maxFileSize', 10);
+        $fileSizeMB = ceil($fileSizeByte * 1048576);  // 1MB = 1048576 Bytes
+
+        return $fileSizeMB;
     }
 
     /**
