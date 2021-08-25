@@ -35,6 +35,8 @@ class CalderaMigrator extends BaseMigrator
         return $forms;
     }
 
+   
+
     /**
      * @param $form
      * @return array
@@ -54,6 +56,7 @@ class CalderaMigrator extends BaseMigrator
                 'index' => $field['ID'], // get the order id from order array
                 'required' => isset($field['required']) ? true : false,
                 'label' => $field['label'],
+                'label_placement' => $this->getLabelPlacement($field),
                 'name' => $field['slug'],
                 'placeholder' => ArrayHelper::get($field, 'placeholder'),
                 'class' => $field['config']['custom_class'],
@@ -104,12 +107,10 @@ class CalderaMigrator extends BaseMigrator
                     $args['options'] = array_combine(range(1, $number), range(1, $number));
                     break;
                 case 'input_file':
-                    $byte = ArrayHelper::get($field, 'config.max_upload', 6000);
-                    $kb = ceil($byte / 1000);
                     $args['help_message'] = $field['caption'];
-                    $args['allowed_file_types'] = $this->getFileTypes($field);
+                    $args['allowed_file_types'] = $this->getFileTypes($field, 'config.allowed');
                     $args['max_size_unit'] = 'KB';
-                    $args['max_file_size'] = $kb;
+                    $args['max_file_size'] = $this->getFileSize($field);
                     $args['max_file_count'] = ArrayHelper::isTrue($field,
                         'config.multi_upload') ? 5 : 1; //limit 5 for unlimited files
                     $args['upload_btn_text'] = ArrayHelper::get($field, 'config.multi_upload_text') ?: 'File Upload';
@@ -147,6 +148,13 @@ class CalderaMigrator extends BaseMigrator
             $returnData['stepsWrapper'] = $this->getStepWrapper();
         }
         return $returnData;
+    }
+
+    private function getLabelPlacement($field) {
+        if($field['hide_label'] == 1) {
+            return 'hide_label';
+        }
+        return 'top';
     }
 
     /**
@@ -208,19 +216,13 @@ class CalderaMigrator extends BaseMigrator
 
     /**
      * @param $field
-     * @return array
+     * @return int
      */
-    private function getFileTypes($field)
-    {
-        //todo more file types
-        $formattedTypes = explode(',', ArrayHelper::get($field, 'config.allowed', ''));
-        $fileTypeOptions = [];
-        foreach ($formattedTypes as $format) {
-            if (!empty($format) && (strpos('jpg|jpeg|gif|png|bmp', $format) != false)) {
-                $fileTypeOptions[] = 'jpg|jpeg|gif|png|bmp';
-            }
-        }
-        return array_unique($fileTypeOptions);
+    private function getFileSize($field) {
+        $fileSizeByte = ArrayHelper::get($field, 'config.max_upload', 6000);
+        $fileSizeKilobyte = ceil(($fileSizeByte * 1024)/1000);
+
+        return $fileSizeKilobyte;
     }
 
     /**

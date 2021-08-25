@@ -38,7 +38,6 @@ class GravityFormsMigrator extends BaseMigrator
             }
         }
 
-        //dd($this->getFluentClassicField($type, $args));
         //dd($this->formatFieldData($field));
 
         $submitBtn = $this->getSubmitBttn([
@@ -138,7 +137,7 @@ class GravityFormsMigrator extends BaseMigrator
                 $repeaterFields = ArrayHelper::get($field, 'choices', []);
                 $args['fields'] = $this->getRepeaterFields($repeaterFields, $field['label']);;
             case 'input_file':
-                $args['allowed_file_types'] = $this->getFileTypes($field);
+                $args['allowed_file_types'] = $this->getFileTypes($field, 'allowedExtensions');
                 $args['max_size_unit'] = 'MB';
                 $fileSizeByte = ArrayHelper::get($field, 'maxFileSize', 10);
                 $fileSizeMB = ceil($fileSizeByte * 1048576);  // 1MB = 1048576 Bytes
@@ -331,29 +330,6 @@ class GravityFormsMigrator extends BaseMigrator
             }
         }
         return $arr;
-    }
-
-    /**
-     * @param $field
-     * @return array
-     */
-    private function getFileTypes($field)
-    {
-        // All Supported File Types in Fluent Forms
-        $allFileTypes = ["jpg|jpeg|gif|png|bmp","mp3|wav|ogg|oga|wma|mka|m4a|ra|mid|midi|mpga","avi|divx|flv|mov|ogv|mkv|mp4|m4v|divx|mpg|mpeg|mpe|video/quicktime|qt","pdf","doc|ppt|pps|xls|mdb|docx|xlsx|pptx|odt|odp|ods|odg|odc|odb|odf|rtf|txt","zip|gz|gzip|rar|7z","exe","csv"];
-
-        $formattedTypes = explode(', ', ArrayHelper::get($field, 'allowedExtensions', ''));
-        $fileTypeOptions = [];
-        foreach ($formattedTypes as $format) {
-            foreach ($allFileTypes as $fileTypes) {
-                if (!empty($format) && (strpos($fileTypes, $format) !== false)) {                 
-                    array_push($fileTypeOptions, $fileTypes);
-                }
-                
-            }
-        }
-        
-        return array_unique($fileTypeOptions);
     }
 
     private function getContainer($fields, $fluentFields)
