@@ -38,7 +38,6 @@ class GravityFormsMigrator extends BaseMigrator
             }
         }
 
-        //dd($fields);
         //dd($this->formatFieldData($field));
 
         $submitBtn = $this->getSubmitBttn([
@@ -138,11 +137,11 @@ class GravityFormsMigrator extends BaseMigrator
                 $repeaterFields = ArrayHelper::get($field, 'choices', []);
                 $args['fields'] = $this->getRepeaterFields($repeaterFields, $field['label']);;
             case 'input_file':
-                $args['allowed_file_types'] = $this->getFileTypes($field);
+                $args['allowed_file_types'] = $this->getFileTypes($field, 'allowedExtensions');
                 $args['max_size_unit'] = 'MB';
-                $args['max_file_size'] = ArrayHelper::get($field, 'maxFileSize', 10);
+                $args['max_file_size'] = $this->getFileSize($field);;
                 $args['max_file_count'] = ArrayHelper::isTrue($field,
-                    'multipleFiles') ? 5 : 1; //limit 5 for unlimited files
+                    'multipleFiles') ? $field['maxFiles'] : 1; 
                 $args['upload_btn_text'] = 'File Upload';
                 break;
             case 'custom_html':
@@ -183,6 +182,17 @@ class GravityFormsMigrator extends BaseMigrator
     }
 
     /**
+     * @param $field
+     * @return filesize in MB
+     */
+    private function getFileSize($field) {
+        $fileSizeByte = ArrayHelper::get($field, 'maxFileSize', 10);
+        $fileSizeMB = ceil($fileSizeByte * 1048576);  // 1MB = 1048576 Bytes
+
+        return $fileSizeMB;
+    }
+
+    /**
      * @return array
      */
     public function fieldTypes()
@@ -194,7 +204,7 @@ class GravityFormsMigrator extends BaseMigrator
             'hidden' => 'input_hidden',
             'textarea' => 'input_textarea',
             'website' => 'input_url',
-            'phone' => 'input_phone',
+            'phone' => 'phone',
             'select' => 'select',
             'list' => 'repeater_field',
             'multiselect' => 'multi_select',
@@ -329,23 +339,6 @@ class GravityFormsMigrator extends BaseMigrator
             }
         }
         return $arr;
-    }
-
-    /**
-     * @param $field
-     * @return array
-     */
-    private function getFileTypes($field)
-    {
-        //todo more file types
-        $formattedTypes = explode(',', ArrayHelper::get($field, 'allowedExtensions', ''));
-        $fileTypeOptions = [];
-        foreach ($formattedTypes as $format) {
-            if (!empty($format) && (strpos('jpg|jpeg|gif|png|bmp', $format) != false)) {
-                $fileTypeOptions[] = 'jpg|jpeg|gif|png|bmp';
-            }
-        }
-        return array_unique($fileTypeOptions);
     }
 
     private function getContainer($fields, $fluentFields)

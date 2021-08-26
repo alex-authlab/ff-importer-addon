@@ -833,7 +833,7 @@ abstract class BaseMigrator
                     'admin_field_label' => $args['admin_field_label'],
                     'label_placement' => $args['label_placement'],
                     'btn_text' => $args['upload_btn_text'],
-                    'help_message' => '',
+                    'help_message' => $args['help_message'],
                     'validation_rules' => [
                         'required' => [
                             'value' => $args['required'],
@@ -1405,6 +1405,24 @@ abstract class BaseMigrator
                 wpFluent()->table('fluentform_form_meta')->insert($settings);
             }
         }
+    }
+
+    protected function getFileTypes($field, $arg) {
+        // All Supported File Types in Fluent Forms
+        $allFileTypes = ["jpg|jpeg|gif|png|bmp","mp3|wav|ogg|oga|wma|mka|m4a|ra|mid|midi|mpga","avi|divx|flv|mov|ogv|mkv|mp4|m4v|divx|mpg|mpeg|mpe|video/quicktime|qt","pdf","doc|ppt|pps|xls|mdb|docx|xlsx|pptx|odt|odp|ods|odg|odc|odb|odf|rtf|txt","zip|gz|gzip|rar|7z","exe","csv"];
+
+        $formattedTypes = explode(', ', ArrayHelper::get($field, $arg , ''));
+        $fileTypeOptions = [];
+        foreach ($formattedTypes as $format) {
+            foreach ($allFileTypes as $fileTypes) {
+                if (!empty($format) && (strpos($fileTypes, $format) !== false)) {                 
+                    array_push($fileTypeOptions, $fileTypes);
+                }
+                
+            }
+        }
+        
+        return array_unique($fileTypeOptions);
     }
 
 
