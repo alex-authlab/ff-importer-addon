@@ -68,6 +68,13 @@ class CalderaMigrator extends BaseMigrator
             $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
             switch ($type) {
                 case 'input_text':
+                    if (ArrayHelper::isTrue($field, 'config.masked')) {
+                        $type = 'input_mask';
+                        $args['temp_mask'] = 'custom';
+                        $args['mask'] = str_replace('9', '0',
+                        $field['config']['mask']);//replace mask 9 with 0 for numbers
+                    }
+                    break;
                 case 'email':
                 case 'input_textarea':
                 case 'input_url':
@@ -88,21 +95,14 @@ class CalderaMigrator extends BaseMigrator
                     $args['format'] = Arrayhelper::get($field, 'config.format');
                     break;
                 case 'input_number':
+                    $args['step'] = $field['config']['step'];
+                    $args['min'] = $field['config']['min'];
+                    $args['max'] = $field['config']['max'];
+                    break;
                 case 'rangeslider':
                     $args['step'] = $field['config']['step'];
                     $args['min'] = $field['config']['step'];
                     $args['max'] = $field['config']['step'];
-                    break;
-                case 'input_mask':
-                    if ($field['type'] == 'text') {
-                        if (!ArrayHelper::isTrue($field, 'config.masked')) {
-                            $args['temp_mask'] = '';
-                            break; // if masked turned of for txt input then no mask
-                        }
-                    }
-                    $args['temp_mask'] = 'custom';
-                    $args['mask'] = str_replace('9', '0',
-                        $field['config']['custom']);//replace mask 9 with 0 for numbers
                     break;
                 case 'ratings':
                     $number = ArrayHelper::get($field, 'config.number', 5);
@@ -166,7 +166,7 @@ class CalderaMigrator extends BaseMigrator
     {
         $fieldTypes = [
             'email' => 'email',
-            'text' => 'input_mask', //text input has mask option
+            'text' => 'input_text', //text input has mask option
             'hidden' => 'input_hidden',
             'textarea' => 'input_textarea',
             'paragraph' => 'input_textarea',
