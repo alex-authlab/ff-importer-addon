@@ -47,6 +47,8 @@ class CalderaMigrator extends BaseMigrator
         $fields = Caldera_Forms_Forms::get_fields($form);
         $hasStep = false;
 
+        //var_dump($fields);
+
         foreach ($fields as $name => $field) {
             if (ArrayHelper::get($field, 'config.type_override')) {
                 $field['type'] = $field['config']['type_override'];
@@ -58,7 +60,7 @@ class CalderaMigrator extends BaseMigrator
                 'label' => $field['label'],
                 'label_placement' => $this->getLabelPlacement($field),
                 'name' => $field['slug'],
-                'placeholder' => ArrayHelper::get($field, 'placeholder'),
+                'placeholder' => ArrayHelper::get($field, 'config.placeholder'),
                 'class' => $field['config']['custom_class'],
                 'value' => ArrayHelper::get($field, 'config.default'),
                 'help_message' => ArrayHelper::get($field, 'caption'),
