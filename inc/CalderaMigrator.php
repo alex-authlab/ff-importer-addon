@@ -11,6 +11,7 @@ class CalderaMigrator extends BaseMigrator
         $this->key = 'caldera';
         $this->title = 'Caldera Forms';
         $this->shortcode = 'caldera_form';
+        $this->hasStep = false;
         parent::__construct();
     }
 
@@ -35,8 +36,6 @@ class CalderaMigrator extends BaseMigrator
         return $forms;
     }
 
-   
-
     /**
      * @param $form
      * @return array
@@ -45,27 +44,52 @@ class CalderaMigrator extends BaseMigrator
     {
         $fluentFields = [];
         $fields = Caldera_Forms_Forms::get_fields($form);
-        $hasStep = false;
 
         //var_dump($fields);
 
         foreach ($fields as $name => $field) {
-            if (ArrayHelper::get($field, 'config.type_override')) {
-                $field['type'] = $field['config']['type_override'];
+            $field = (array)$field;
+            list($type, $args) = $this->formatFieldData($field);
+            if ($value = $this->getFluentClassicField($type, $args)) {
+                $fluentFields[$field['ID']] = $value;
             }
-            $args = [
-                'uniqElKey' => $field['ID'],
-                'index' => $field['ID'], // get the order id from order array
-                'required' => isset($field['required']) ? true : false,
-                'label' => $field['label'],
-                'label_placement' => $this->getLabelPlacement($field),
-                'name' => $field['slug'],
-                'placeholder' => ArrayHelper::get($field, 'config.placeholder'),
-                'class' => $field['config']['custom_class'],
-                'value' => ArrayHelper::get($field, 'config.default'),
-                'help_message' => ArrayHelper::get($field, 'caption'),
-            ];
-            $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
+        }
+
+        $returnData = [
+            'fields' => $this->getContainer($form, $fluentFields),
+            'submitButton' => $this->submitBtn
+        ];
+
+        if ($this->hasStep && defined('FLUENTFORMPRO')) {
+            $returnData['stepsWrapper'] = $this->getStepWrapper();
+        }
+        
+        return $returnData;
+    } 
+
+    private function formatFieldData(array $field)
+    {
+        if (ArrayHelper::get($field, 'config.type_override')) {
+            $field['type'] = $field['config']['type_override'];
+        }
+
+        //var_dump($field);
+
+        $args = [
+            'uniqElKey' => $field['ID'],
+            'index' => $field['ID'], // get the order id from order array
+            'required' => isset($field['required']) ? true : false,
+            'label' => $field['label'],
+            'label_placement' => $this->getLabelPlacement($field),
+            'name' => $field['slug'],
+            'placeholder' => ArrayHelper::get($field, 'config.placeholder'),
+            'class' => $field['config']['custom_class'],
+            'value' => ArrayHelper::get($field, 'config.default'),
+            'help_message' => ArrayHelper::get($field, 'caption'),
+        ];
+
+        $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
+
             switch ($type) {
                 case 'input_text':
                     if (ArrayHelper::isTrue($field, 'config.masked')) {
@@ -77,6 +101,8 @@ class CalderaMigrator extends BaseMigrator
                     break;
                 case 'email':
                 case 'input_textarea':
+                    $args['rows'] = ArrayHelper::get($field, 'config.rows');
+                    break;
                 case 'input_url':
                 case 'color_picker':
                 case 'section_break':
@@ -119,12 +145,14 @@ class CalderaMigrator extends BaseMigrator
                     break;
                 case 'custom_html':
                     $args['html_codes'] = $field['config']['default'];
+                    $args['container_class'] = $field['config']['custom_class'];
                     break;
 
                 case 'gdpr_agreement': // ??
                     $args['tnc_html'] = $field['config']['agreement'];
                     break;
                 case 'button':
+                    //$pageLength = count(ArrayHelper::get($form, 'page_names'));
                     if ($field['config']['type'] == 'next') {
                         $hasStep = true;
                         $type = 'form_step';
@@ -132,24 +160,16 @@ class CalderaMigrator extends BaseMigrator
                     } elseif ($field['config']['type'] != 'submit') {
                         break;
                     }
-                    $this->submitBtn = $this->getSubmitBttn([
+                   $this->submitBtn = $this->getSubmitBttn([
                         'uniqElKey' => $field['ID'],
                         'label' => $field['label'],
                         'class' => $field['config']['custom_class'],
                     ]);
                     break;
             }
-            $fluentFields[$field['ID']] = $this->getFluentClassicField($type, $args);
-        }
-        array_filter($fluentFields);
-        $returnData = [
-            'fields' => $this->getContainer($form, $fluentFields),
-            'submitButton' => $this->submitBtn
-        ];
-        if ($hasStep && defined('FLUENTFORMPRO')) {
-            $returnData['stepsWrapper'] = $this->getStepWrapper();
-        }
-        return $returnData;
+
+            return array($type, $args);
+
     }
 
     private function getLabelPlacement($field) {
@@ -157,6 +177,17 @@ class CalderaMigrator extends BaseMigrator
             return 'hide_label';
         }
         return 'top';
+    }
+
+    /**
+     * @param $field
+     * @return int
+     */
+    private function getFileSize($field) {
+        $fileSizeByte = ArrayHelper::get($field, 'config.max_upload', 6000);
+        $fileSizeKilobyte = ceil(($fileSizeByte * 1024)/1000);
+
+        return $fileSizeKilobyte;
     }
 
     /**
@@ -174,7 +205,7 @@ class CalderaMigrator extends BaseMigrator
             'url' => 'input_url',
             'color_picker' => 'color_picker',
             'phone_better' => 'phone',
-            'phone' => 'input_phone',
+            'phone' => 'phone',
             'select' => 'select',
             'dropdown' => 'select',
             'filtered_select2' => 'select',
@@ -184,7 +215,7 @@ class CalderaMigrator extends BaseMigrator
             'date_picker' => 'input_date',
             'range' => 'input_number',
             'number' => 'input_number',
-            'rangeslider' => 'rangeslider',
+            'range_slider' => 'rangeslider',
             'star_rating' => 'ratings',
             'file' => 'input_file',
             'cf2_file' => 'input_file',
@@ -193,6 +224,7 @@ class CalderaMigrator extends BaseMigrator
             'section_break' => 'section_break',
             'gdpr' => 'gdpr_agreement',
             'button' => 'button',
+            //'page_names' => 'form_step',
         ];
         //todo pro fields remove
         return $fieldTypes;
@@ -214,17 +246,6 @@ class CalderaMigrator extends BaseMigrator
             ];
         }
         return $formattedOptions;
-    }
-
-    /**
-     * @param $field
-     * @return int
-     */
-    private function getFileSize($field) {
-        $fileSizeByte = ArrayHelper::get($field, 'config.max_upload', 6000);
-        $fileSizeKilobyte = ceil(($fileSizeByte * 1024)/1000);
-
-        return $fileSizeKilobyte;
     }
 
     /**

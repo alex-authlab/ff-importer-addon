@@ -159,7 +159,9 @@ abstract class BaseMigrator
             'layout_class' => '',
             'input_name_args'=>'',
             'is_time_enabled'=>'',
-            'address_args'=>''
+            'address_args'=>'',
+            'rows' => '',
+            'cols' => ''
         ];
 
         $args = wp_parse_args($args, $defaults);
@@ -345,7 +347,12 @@ abstract class BaseMigrator
                     'placeholder' => $args['placeholder'],
                 ],
                 'settings' => [
+                    'container_class' => $args['container_class'],
                     'label' => $args['label'],
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
+                    'help_message' => $args['help_message'],
+                    'conditional_logics' => [],
                     'validation_rules' => [
                         'required' => [
                             'value' => $args['required'],
@@ -444,7 +451,7 @@ abstract class BaseMigrator
                     'class' => $args['class'],
                     'id' => '',
                     'placeholder' => $args['placeholder'],
-                    'rows' => 3,
+                    'rows' => $args['rows'],
                     'cols' => 2,
                     'maxlength' => $args['maxlength'],
                 ],
@@ -735,7 +742,7 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'admin_field_label' => $args['admin_field_label'],
                     'label_placement' => $args['label_placement'],
-                    'help_message' => '',
+                    'help_message' => $args['help_message'],
                     'number_step' => $args['step'],
                     'prefix_label' => '',
                     'suffix_label' => '',
