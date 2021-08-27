@@ -609,7 +609,7 @@ abstract class BaseMigrator
                     'enable_image_input' => $args['enable_image_input'],
                     'validation_rules' => [
                         'required' => [
-                            'value' => false,
+                            'value' => $args['required'],
                             'message' => __('This field is required', 'fluentform'),
                         ],
                     ],
@@ -749,7 +749,7 @@ abstract class BaseMigrator
                     'numeric_formatter' => '',
                     'validation_rules' => [
                         'required' => [
-                            'value' => false,
+                            'value' => $args['required'],
                             'message' => __('This field is required', 'fluentform'),
                         ],
                         'numeric' => [
@@ -806,7 +806,7 @@ abstract class BaseMigrator
                     'default_country' => '',
                     'validation_rules' => [
                         'required' => [
-                            'value' => false,
+                            'value' => $args['required'],
                             'message' => __('This field is required', 'fluentformpro'),
                         ],
                         'valid_phone_number' => [
@@ -950,7 +950,7 @@ abstract class BaseMigrator
                     'conditional_logics' => [],
                     'validation_rules' => [
                         'required' => [
-                            'value' => false,
+                            'value' => $args['required'],
                             'message' => __('This field is required', 'fluentform'),
                         ],
                     ],
