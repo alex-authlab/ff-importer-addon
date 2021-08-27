@@ -127,8 +127,8 @@ class CalderaMigrator extends BaseMigrator
                     break;
                 case 'rangeslider':
                     $args['step'] = $field['config']['step'];
-                    $args['min'] = $field['config']['step'];
-                    $args['max'] = $field['config']['step'];
+                    $args['min'] = $field['config']['min'];
+                    $args['max'] = $field['config']['max'];
                     break;
                 case 'ratings':
                     $number = ArrayHelper::get($field, 'config.number', 5);

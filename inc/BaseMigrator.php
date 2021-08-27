@@ -909,14 +909,21 @@ abstract class BaseMigrator
                 'index' => $args['index'],
                 'element' => 'rangeslider',
                 'attributes' => [
+                    'type' => 'range',
+                    'name' => $args['name'],
+                    'value' => $args['value'],
+                    'id' => $args['id'],
+                    'class' => $args['class'],
                     'min' => $args['min'],
                     'max' => $args['max'],
-                    'type' => 'range'
                 ],
                 'settings' => [
                     'number_step' => $args['step'],
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
+                    'container_class' => '',
                     'conditional_logics' => [],
                     'validation_rules' => [
                         'required' => [
