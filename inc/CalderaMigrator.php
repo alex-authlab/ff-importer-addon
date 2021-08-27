@@ -45,7 +45,7 @@ class CalderaMigrator extends BaseMigrator
         $fluentFields = [];
         $fields = Caldera_Forms_Forms::get_fields($form);
 
-        //var_dump($fields);
+        //var_dump($form);
 
         foreach ($fields as $name => $field) {
             $field = (array)$field;
@@ -395,7 +395,7 @@ class CalderaMigrator extends BaseMigrator
             [
                 'sendTo' => [
                     'type' => 'email',
-                    'email' => ArrayHelper::get($form, 'mailer.sender_email'),
+                    'email' => ArrayHelper::get($form, 'mailer.recipients'),
                     'field' => '',
                     'routing' => [],
                 ],
@@ -403,10 +403,10 @@ class CalderaMigrator extends BaseMigrator
                 'name' => 'Admin Notification',
                 'subject' => ArrayHelper::get($form, 'mailer.email_subject', 'Admin Notification'),
                 'to' => ArrayHelper::get($form, 'mailer.recipients', '{wp.admin_email}'),
-                'replyTo' => '{wp.admin_email}',
+                'replyTo' => ArrayHelper::get($form, 'mailer.reply_to', '{wp.admin_email}'),
                 'message' => str_replace('{summary}', '{all_data}', ArrayHelper::get($form, 'mailer.email_message')),
                 'fromName' => ArrayHelper::get($form, 'mailer.sender_name'),
-                'fromAddress' => ArrayHelper::get($form, 'mailer.sender_email'),
+                'fromEmail' => ArrayHelper::get($form, 'mailer.sender_email'),
                 'bcc' => ArrayHelper::get($form, 'mailer.bcc_to'),
             ];
         return [
