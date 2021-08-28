@@ -604,7 +604,8 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
                     'advanced_options' => $args['options'],
-                    'layout_class' => $args['is_button_type'] === true ? 'ff_list_buttons' : '',
+                    //'layout_class' => $args['is_button_type'] === true ? 'ff_list_buttons' : '',
+                    'layout_class' => $args['layout_class'],
                     'calc_value_status' => false,
                     'enable_image_input' => $args['enable_image_input'],
                     'validation_rules' => [

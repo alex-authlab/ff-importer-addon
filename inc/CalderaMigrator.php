@@ -114,7 +114,7 @@ class CalderaMigrator extends BaseMigrator
                     $args['enable_select_2'] = ArrayHelper::get($field, 'type') == 'filtered_select2' ? 'yes' : 'no';
                     $isBttnType = ArrayHelper::get($field, 'type') == 'toggle_switch' ? true : false;
                     if ($isBttnType) {
-                        $args['layout_class'] = 'ff_list_buttons'; //for btn type chkbox
+                        $args['layout_class'] = 'ff_list_buttons'; //for btn type radio
                     }
                     break;
                 case 'input_date':
@@ -211,7 +211,7 @@ class CalderaMigrator extends BaseMigrator
             'filtered_select2' => 'select',
             'radio' => 'input_radio',
             'checkbox' => 'input_checkbox',
-            'toggle_switch' => 'input_checkbox',
+            'toggle_switch' => 'input_radio',
             'date_picker' => 'input_date',
             'range' => 'input_number',
             'number' => 'input_number',
