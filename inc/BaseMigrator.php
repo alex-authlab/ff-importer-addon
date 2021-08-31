@@ -159,7 +159,9 @@ abstract class BaseMigrator
             'layout_class' => '',
             'input_name_args'=>'',
             'is_time_enabled'=>'',
-            'address_args'=>''
+            'address_args'=>'',
+            'rows' => '',
+            'cols' => ''
         ];
 
         $args = wp_parse_args($args, $defaults);
@@ -345,7 +347,12 @@ abstract class BaseMigrator
                     'placeholder' => $args['placeholder'],
                 ],
                 'settings' => [
+                    'container_class' => $args['container_class'],
                     'label' => $args['label'],
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
+                    'help_message' => $args['help_message'],
+                    'conditional_logics' => [],
                     'validation_rules' => [
                         'required' => [
                             'value' => $args['required'],
@@ -444,7 +451,7 @@ abstract class BaseMigrator
                     'class' => $args['class'],
                     'id' => '',
                     'placeholder' => $args['placeholder'],
-                    'rows' => 3,
+                    'rows' => $args['rows'],
                     'cols' => 2,
                     'maxlength' => $args['maxlength'],
                 ],
@@ -597,12 +604,13 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
                     'advanced_options' => $args['options'],
-                    'layout_class' => $args['is_button_type'] === true ? 'ff_list_buttons' : '',
+                    //'layout_class' => $args['is_button_type'] === true ? 'ff_list_buttons' : '',
+                    'layout_class' => $args['layout_class'],
                     'calc_value_status' => false,
                     'enable_image_input' => $args['enable_image_input'],
                     'validation_rules' => [
                         'required' => [
-                            'value' => false,
+                            'value' => $args['required'],
                             'message' => __('This field is required', 'fluentform'),
                         ],
                     ],
@@ -735,14 +743,14 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'admin_field_label' => $args['admin_field_label'],
                     'label_placement' => $args['label_placement'],
-                    'help_message' => '',
+                    'help_message' => $args['help_message'],
                     'number_step' => $args['step'],
                     'prefix_label' => '',
                     'suffix_label' => '',
                     'numeric_formatter' => '',
                     'validation_rules' => [
                         'required' => [
-                            'value' => false,
+                            'value' => $args['required'],
                             'message' => __('This field is required', 'fluentform'),
                         ],
                         'numeric' => [
@@ -799,7 +807,7 @@ abstract class BaseMigrator
                     'default_country' => '',
                     'validation_rules' => [
                         'required' => [
-                            'value' => false,
+                            'value' => $args['required'],
                             'message' => __('This field is required', 'fluentformpro'),
                         ],
                         'valid_phone_number' => [
@@ -902,14 +910,21 @@ abstract class BaseMigrator
                 'index' => $args['index'],
                 'element' => 'rangeslider',
                 'attributes' => [
+                    'type' => 'range',
+                    'name' => $args['name'],
+                    'value' => $args['value'],
+                    'id' => $args['id'],
+                    'class' => $args['class'],
                     'min' => $args['min'],
                     'max' => $args['max'],
-                    'type' => 'range'
                 ],
                 'settings' => [
                     'number_step' => $args['step'],
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
+                    'label_placement' => $args['label_placement'],
+                    'admin_field_label' => $args['admin_field_label'],
+                    'container_class' => '',
                     'conditional_logics' => [],
                     'validation_rules' => [
                         'required' => [
@@ -943,7 +958,7 @@ abstract class BaseMigrator
                     'conditional_logics' => [],
                     'validation_rules' => [
                         'required' => [
-                            'value' => false,
+                            'value' => $args['required'],
                             'message' => __('This field is required', 'fluentform'),
                         ],
                     ],

@@ -38,7 +38,7 @@ class GravityFormsMigrator extends BaseMigrator
             }
         }
 
-        //dd($this->formatFieldData($field));
+        //dd($field);
 
         $submitBtn = $this->getSubmitBttn([
             'uniqElKey' => time(),
@@ -187,6 +187,11 @@ class GravityFormsMigrator extends BaseMigrator
      */
     private function getFileSize($field) {
         $fileSizeByte = ArrayHelper::get($field, 'maxFileSize', 10);
+
+        if(empty($fileSizeByte)) {
+            $fileSizeByte = 1;
+        }      
+
         $fileSizeMB = ceil($fileSizeByte * 1048576);  // 1MB = 1048576 Bytes
 
         return $fileSizeMB;
