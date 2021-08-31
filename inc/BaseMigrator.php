@@ -1,7 +1,6 @@
 <?php
 
 
-use FluentForm\App\Modules\Form\Form;
 use FluentForm\Framework\Helpers\ArrayHelper;
 
 abstract class BaseMigrator
@@ -32,7 +31,6 @@ abstract class BaseMigrator
             die();
         }
         do_action('ff_import_forms_' . $type);
-        return;
     }
 
     public function import_forms($data)
@@ -65,7 +63,7 @@ abstract class BaseMigrator
                     if ($fields = $this->getFields($formItem)) {
                         $formFields = json_encode($fields);
                     } else {
-                        $failed[] = $fields; //push failed form id name
+                        $failed[] = $this->getFormName($formItem);
                         continue;
                     }
                     $form = [
@@ -90,10 +88,21 @@ abstract class BaseMigrator
                     $this->insertMetas($metas, $formId);
                     do_action('fluentform_form_imported', $formId);
                 }
-                wp_send_json([
-                    'message' => __('Your forms has been successfully imported.', 'fluentform'),
-                    'inserted_forms' => $insertedForms
+                $msg = '';
+                if (count($failed) > 0) {
+                    $msg = "These forms was not imported for invalid data : " . implode(', ',$failed);
+                }
+                if (count($insertedForms) > 0) {
+                    wp_send_json([
+                        'message' => "Your forms has been successfully imported. " . $msg,
+                        'inserted_forms' => $insertedForms
+                    ], 200);
+                    return;
+                }
+                wp_send_json_error([
+                    'message' => "Import failed fo this forms for invalid data. " . $msg,
                 ], 200);
+
             }
         }
 
@@ -160,7 +169,7 @@ abstract class BaseMigrator
             'input_name_args'=>'',
             'is_time_enabled'=>'',
             'address_args'=>'',
-            'rows' => '',
+            'rows' => '3',
             'cols' => ''
         ];
 

@@ -5,6 +5,7 @@ window.onload = function (event) {
         jQuery('.ff-migrator-link-call').on('click', function (e) {
 
             e.preventDefault();
+
             jQuery('.ff-m-response').html('');
 
             var data = {
@@ -24,14 +25,18 @@ window.onload = function (event) {
         });
 
         function handleSuccess(res) {
-            jQuery('.ff-m-response').html(res.message);
+
+            var text = jQuery('<div/>', {
+                style: 'border:1px solid green; padding:10px;margin: 10px 0',
+                html: res.message
+            });
+            jQuery('.ff-m-response').html(text);
             let inserted_forms = res.inserted_forms;
-            console.log(res.inserted_forms)
-            let html = '<table class="widefat " cellspacing="0" >';
+            let html = '<table class="widefat " >';
             jQuery.each(inserted_forms, function( index, value ) {
 
                 html += '<tr>' ;
-                var insertedFormLink = `Edit Form : <a  href="${value.edit_url}" />${value.title} </a>`;
+                var insertedFormLink = `View Form : <a class="el-button el-button--success el-button--mini" href="${value.edit_url}" />${value.title} </a>`;
                 html += `<td>${insertedFormLink}</td>`;
                 html += `<td> ID : ${index}</td>`;
                 html +='</tr>';
@@ -43,7 +48,12 @@ window.onload = function (event) {
         }
 
         function handleError(res) {
-            jQuery('.ff-m-response').html(res.data.message)
+            if(res.data.message){
+                jQuery('.ff-m-response').html(res.data.message)
+            }else{
+                jQuery('.ff-m-response').html("Something went wrong please try again")
+
+            }
         }
 
     })();
