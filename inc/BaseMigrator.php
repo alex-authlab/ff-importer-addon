@@ -161,7 +161,9 @@ abstract class BaseMigrator
             'is_time_enabled'=>'',
             'address_args'=>'',
             'rows' => '',
-            'cols' => ''
+            'cols' => '',
+            'enable_calculation' => false,
+            'calculation_formula' => ''
         ];
 
         $args = wp_parse_args($args, $defaults);
@@ -745,8 +747,8 @@ abstract class BaseMigrator
                     'label_placement' => $args['label_placement'],
                     'help_message' => $args['help_message'],
                     'number_step' => $args['step'],
-                    'prefix_label' => '',
-                    'suffix_label' => '',
+                    'prefix_label' => $args['prefix'],
+                    'suffix_label' => $args['suffix'],
                     'numeric_formatter' => '',
                     'validation_rules' => [
                         'required' => [
@@ -768,8 +770,8 @@ abstract class BaseMigrator
                     ],
                     'conditional_logics' => [],
                     'calculation_settings' => [
-                        'status' => false,
-                        'formula' => ''
+                        'status' => $args['enable_calculation'],
+                        'formula' => $args['calculation_formula']
                     ],
                 ],
                 'editor_options' => [
