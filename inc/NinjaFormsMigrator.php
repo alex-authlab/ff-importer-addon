@@ -220,9 +220,6 @@ class NinjaFormsMigrator extends BaseMigrator
             'hidden' => 'input_hidden',
             'submit' => 'submit',
         ];
-
-        //todo pro fields remove
-
         return $fieldTypes;
     }
 

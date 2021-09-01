@@ -402,7 +402,6 @@ class GravityFormsMigrator extends BaseMigrator
             }
             $withContainer[] = $containerConfig;
         }
-//        vdd(array_filter(self::arrayFlat($withContainer)));
         return (array_filter(self::arrayFlat($withContainer)));
     }
 

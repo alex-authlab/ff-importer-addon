@@ -47,8 +47,7 @@ class CalderaMigrator extends BaseMigrator
 
         foreach ($fields as $name => $field) {
             $field = (array)$field;
-            list($type, $args) = $this->formatFieldData($field, $form);
-
+            list($type, $args) = $this->formatFieldData($field , $form);
             if ($value = $this->getFluentClassicField($type, $args)) {
                 $fluentFields[$field['ID']] = $value;
             }
@@ -67,7 +66,7 @@ class CalderaMigrator extends BaseMigrator
         return $returnData;
     } 
 
-    private function formatFieldData(array $field, $form)
+    private function formatFieldData($field ,$form)
     {
         if (ArrayHelper::get($field, 'config.type_override')) {
             $field['type'] = $field['config']['type_override'];
@@ -93,8 +92,7 @@ class CalderaMigrator extends BaseMigrator
                     if (ArrayHelper::isTrue($field, 'config.masked')) {
                         $type = 'input_mask';
                         $args['temp_mask'] = 'custom';
-                        $args['mask'] = str_replace('9', '0',
-                        $field['config']['mask']);//replace mask 9 with 0 for numbers
+                        $args['mask'] = str_replace('9', '0', $field['config']['mask']);//replace mask 9 with 0 for numbers
                     }
                     break;
                 case 'email':
@@ -125,17 +123,13 @@ class CalderaMigrator extends BaseMigrator
 
                     // Caldera Calculation field
                     if(ArrayHelper::get($field, 'type') == 'calculation') {
-                        //var_dump($form);
                         $args['prefix'] = $field['config']['before'];
                         $args['suffix'] = $field['config']['after'];
 
-                        if (ArrayHelper::isTrue($field, 'config.manual')) {
+                        if (ArrayHelper::isTrue($field, 'config.manual') || !empty(Arrayhelper::get($field, 'config.formular'))) {
                             $args['enable_calculation'] = true;
                             $args['calculation_formula'] = $this->convertFormulas($field, $form);
-                        } else if (!empty(Arrayhelper::get($field, 'config.formular'))) {
-                            $args['enable_calculation'] = true;
-                            $args['calculation_formula'] = $this->convertFormulas($field, $form);
-                        }
+                        } 
                     }
                     
                     break;
@@ -162,16 +156,13 @@ class CalderaMigrator extends BaseMigrator
                     $args['container_class'] = $field['config']['custom_class'];
                     break;
 
-                case 'gdpr_agreement': // ??
+                case 'gdpr_agreement':
                     $args['tnc_html'] = $field['config']['agreement'];
                     break;
-                case 'button':      
-                    // Check if there are more than 1 page in Caldera
+                case 'button':
                     $pageLength = count(ArrayHelper::get($form, 'page_names'));
-                    if($pageLength > 1) {
+                    if ($field['config']['type'] == 'next' && $pageLength > 1) {
                         $this->hasStep = true;
-                    }   
-                    if ($field['config']['type'] == 'next' && $this->hasStep) {
                         $type = 'form_step';
                         break; //skipped prev button ,only one is required
                     } elseif ($field['config']['type'] != 'submit') {
@@ -190,10 +181,10 @@ class CalderaMigrator extends BaseMigrator
     }
 
     private function getLabelPlacement($field) {
-        if($field['hide_label'] == 1) {
+        if(ArrayHelper::get($field,'hide_label') == 1) {
             return 'hide_label';
         }
-        return 'top';
+        return '';
     }
 
     // Function to convert shortcodes in numeric field calculations (todo)
@@ -271,7 +262,7 @@ class CalderaMigrator extends BaseMigrator
     {
         $fieldTypes = [
             'email' => 'email',
-            'text' => 'input_text', //text input has mask option
+            'text' => 'input_text',
             'hidden' => 'input_hidden',
             'textarea' => 'input_textarea',
             'paragraph' => 'input_textarea',
@@ -301,7 +292,6 @@ class CalderaMigrator extends BaseMigrator
             'gdpr' => 'gdpr_agreement',
             'button' => 'button',
         ];
-        //todo pro fields remove
         return $fieldTypes;
     }
 
@@ -513,4 +503,5 @@ class CalderaMigrator extends BaseMigrator
     {
         return $form['name'];
     }
+
 }
