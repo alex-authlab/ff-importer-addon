@@ -57,12 +57,22 @@ class NinjaFormsMigrator extends BaseMigrator
         $fluentFields = [];
         $fields = ArrayHelper::get($form, 'fields');
         foreach ($fields as $field) {
+            //var_dump($field);
             list($type, $args) = $this->formatFieldData($field);
             if ($value = $this->getFluentClassicField($type, $args)) {
                 $fluentFields[$field['key']] = $value;
             }
 
         }
+
+        $submitBtn = $this->getSubmitBttn([
+            'uniqElKey' => $field['key'],
+            'label' => $field['label'],
+            'class' => $field['element_class'],
+        ]);
+
+        
+
         $returnData = [
             'fields' => $fluentFields,
             'submitButton' => $this->submitBtn
@@ -77,8 +87,6 @@ class NinjaFormsMigrator extends BaseMigrator
      */
     protected function formatFieldData($field)
     {
-        // Get Correct field type
-        $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
         $args = [
             'uniqElKey' => $field['key'],
             'index' => $field['order'],
@@ -88,10 +96,14 @@ class NinjaFormsMigrator extends BaseMigrator
             'placeholder' => ArrayHelper::get($field, 'placeholder', ''),
             'class' => ArrayHelper::get($field, 'element_class', ''),
             'value' => ArrayHelper::get($field, 'value', ''),
-            'help_message' => ArrayHelper::get($field, 'help_text', ''),
+            'help_message' => ArrayHelper::get($field, 'desc_text'),
             'container_class' => ArrayHelper::get($field, 'container_class'),
         ];
+
+        $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
+
         switch ($type) {
+
             case 'select':
             case 'input_radio':
             case 'input_checkbox':
@@ -105,6 +117,11 @@ class NinjaFormsMigrator extends BaseMigrator
                     $optionsData = $this->getOptions(ArrayHelper::get($field, 'image_options', []), $hasImage = true);
                     $args['options'] = $optionsData['options'];
                     $args['value'] = ArrayHelper::get($optionsData, 'selectedOption.0', '');
+
+                    if (ArrayHelper::isTrue($field, 'allow_multi_select')) {
+                        $type = 'input_checkbox';
+                    }
+                    
                 } else {
                     if ($field['type'] == 'checkbox' && empty($args['options'])) {
                         //single item checkbox
@@ -139,6 +156,9 @@ class NinjaFormsMigrator extends BaseMigrator
                 $args['step'] = $field['num_step'];
                 $args['min'] = $field['num_min'];
                 $args['max'] = $field['num_max'];
+                break;
+            case 'input_hidden':
+                $args['value'] = ArrayHelper::get($field, 'default', '');
                 break;
             case 'ratings':
                 $number = ArrayHelper::get($field, 'number_of_stars', 5);
@@ -196,7 +216,7 @@ class NinjaFormsMigrator extends BaseMigrator
             'address' => 'input_text',
             'city' => 'input_text',
             'zip' => 'input_text',
-            'liststate' => 'input_text',
+            'liststate' => 'select',
             'firstname' => 'input_text',
             'lastname' => 'input_text',
             'listcountry' => 'select_country',
@@ -382,6 +402,7 @@ class NinjaFormsMigrator extends BaseMigrator
      */
     private function getNotificationData($actionData)
     {
+        
         $notification =
             [
                 'sendTo' => [
@@ -395,7 +416,7 @@ class NinjaFormsMigrator extends BaseMigrator
                 'name' => $actionData['label'],
                 'subject' => $actionData['email_subject'],
                 'to' => ($actionData['to'] == '{wp:admin_email}') || ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
-                'replyTo' => ($actionData['to'] == '{wp:admin_email}') || ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
+                'replyTo' => ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['reply_to'],
                 'message' => " <p>{all_data}</p>\n
                                     <p>This form submitted at: {embed_post.permalink}</p>",
                 'fromName' => ArrayHelper::get($actionData, 'from_name'),

@@ -462,6 +462,7 @@ abstract class BaseMigrator
                     'name' => $args['name'],
                     'class' => $args['class'],
                     'id' => '',
+                    'value' => $args['value'],
                     'placeholder' => $args['placeholder'],
                     'rows' => $args['rows'],
                     'cols' => 2,
@@ -1053,8 +1054,8 @@ abstract class BaseMigrator
                     'container_class' => $args['container_class'],
                     'label' => $args['label'],
                     'admin_field_label' => '',
-                    'label_placement' => '',
-                    'help_message' => '',
+                    'label_placement' => $args['label_placement'],
+                    'help_message' => $args['help_message'],
                     'enable_select_2' => 'no',
                     'validation_rules' => [
                         'required' => [
