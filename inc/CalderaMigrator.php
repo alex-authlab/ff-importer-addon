@@ -107,11 +107,13 @@ class CalderaMigrator extends BaseMigrator
                 case 'input_checkbox':
                 case 'dropdown':
                     $args['options'] = $this->getOptions(ArrayHelper::get($field, 'config.option', []));
-                    $args['enable_select_2'] = ArrayHelper::get($field, 'type') == 'filtered_select2' ? 'yes' : 'no';
                     $isBttnType = ArrayHelper::get($field, 'type') == 'toggle_switch' ? true : false;
                     if ($isBttnType) {
                         $args['layout_class'] = 'ff_list_buttons'; //for btn type radio
                     }
+                    break;
+                case 'multi_select':
+                    $args['options'] = $this->getOptions(ArrayHelper::get($field, 'config.option', []));
                     break;
                 case 'input_date':
                     $args['format'] = Arrayhelper::get($field, 'config.format');
@@ -273,7 +275,7 @@ class CalderaMigrator extends BaseMigrator
             'phone' => 'phone',
             'select' => 'select',
             'dropdown' => 'select',
-            'filtered_select2' => 'select',
+            'filtered_select2' => 'multi_select',
             'radio' => 'input_radio',
             'checkbox' => 'input_checkbox',
             'toggle_switch' => 'input_radio',
