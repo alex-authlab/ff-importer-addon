@@ -285,7 +285,6 @@ class NinjaFormsMigrator extends BaseMigrator
         $defaults = $formObject->getFormsDefaultSettings();
         $formSettings = $this->getFormSettings($form);
 
-
         $formMeta = [];
         $actions = Ninja_Forms()->form($this->getFormId($form))->get_actions();
         if(is_array($actions)){
@@ -295,13 +294,14 @@ class NinjaFormsMigrator extends BaseMigrator
                 }
                 $actionData = $action->get_settings();
 
+                //var_dump($formSettings);
+
                 if ($actionData['type'] == 'email') {
                     $formMeta['notifications'] [] = $this->getNotificationData($actionData);
                 } elseif ($actionData['type'] == 'successmessage') {
                     $formMeta['formSettings']['confirmation'] = [
-                        'messageToShow' => $actionData['message'],
-                        'samePageFormBehavior' => $formSettings['clear_complete'] == 1 ? 'reset_form' : '',
-                        'samePageFormBehavior' => $formSettings['hide_complete'] == 1 ? 'hide_form' : '',
+                        'messageToShow' => $actionData['success_msg'],
+                        'samePageFormBehavior' => ($formSettings['hide_complete']) ? 'hide_form' : 'reset_form',
                         'redirectTo' => 'samePage'
                     ];
                 } elseif ($actionData['type'] == 'save') {
@@ -340,6 +340,11 @@ class NinjaFormsMigrator extends BaseMigrator
         $defaults['restrictions']['requireLogin'] = [
             'enabled' => ArrayHelper::isTrue($formSettings, 'logged_in', false),
             'requireLoginMsg' => $formSettings['not_logged_in_msg']
+        ];
+        $defaults['restrictions']['limitNumberOfEntries'] = [
+            'enabled' => isset($formSettings['sub_limit_number']),
+            'numberOfEntries' => $formSettings['sub_limit_number'],
+            'limitReachedMsg' => $formSettings['sub_limit_msg']
         ];
         $formMeta['formSettings']['restrictions'] = $defaults['restrictions'];
         $formMeta['formSettings']['layout'] = $defaults['layout'];
