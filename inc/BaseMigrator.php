@@ -437,7 +437,7 @@ abstract class BaseMigrator
                     'validation_rules' => [
                         'required' => [
                             'value' => $args['required'],
-                            'message' => 'This field is required'
+                            'message' => 'This field is required',
                         ],
                         'email' => [
                             'value' => 1,

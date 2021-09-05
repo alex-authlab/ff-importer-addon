@@ -56,13 +56,12 @@ class NinjaFormsMigrator extends BaseMigrator
     {
         $fluentFields = [];
         $fields = ArrayHelper::get($form, 'fields');
+
         foreach ($fields as $field) {
-            //var_dump($field);
             list($type, $args) = $this->formatFieldData($field);
             if ($value = $this->getFluentClassicField($type, $args)) {
                 $fluentFields[$field['key']] = $value;
             }
-
         }
 
         $submitBtn = $this->getSubmitBttn([
@@ -70,9 +69,6 @@ class NinjaFormsMigrator extends BaseMigrator
             'label' => $field['label'],
             'class' => $field['element_class'],
         ]);
-
-        // Todo
-        $this->getErrorMessages($form);
 
         $returnData = [
             'fields' => $fluentFields,
@@ -88,6 +84,7 @@ class NinjaFormsMigrator extends BaseMigrator
      */
     protected function formatFieldData($field)
     {
+
         $args = [
             'uniqElKey' => $field['key'],
             'index' => $field['order'],
@@ -99,7 +96,6 @@ class NinjaFormsMigrator extends BaseMigrator
             'value' => ArrayHelper::get($field, 'value', ''),
             'help_message' => ArrayHelper::get($field, 'desc_text'),
             'container_class' => ArrayHelper::get($field, 'container_class'),
-            'message' => 'test',
         ];
 
         $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
@@ -296,8 +292,6 @@ class NinjaFormsMigrator extends BaseMigrator
                 }
                 $actionData = $action->get_settings();
 
-            //var_dump($formSettings);
-
                 if ($actionData['type'] == 'email') {
                     $formMeta['notifications'] [] = $this->getNotificationData($actionData);
                 } elseif ($actionData['type'] == 'successmessage') {
@@ -387,43 +381,6 @@ class NinjaFormsMigrator extends BaseMigrator
     }
 
     /**
-     * Get form settings
-     * @param $form
-     * @return array $formSettings
-     */
-    protected function getFormSettings($form)
-    {
-        $formData = Ninja_Forms()->form($form['ID'])->get();
-        return $formData->get_settings();
-    }
-
-    /**
-     * Get all Error Messages
-     * @param $form
-     * @return array $
-     */
-    protected function getErrorMessages($form) {
-        $formSettings = $this->getFormSettings($form);
-        $errorMessages = [];
-
-        $errorMessages = [
-            'requiredError' => $formSettings['fieldsMarkedRequired']
-        ];
-
-        //var_dump($errorMessages);
-        return $errorMessages;
-    }
-
-    /**
-     * @param $form
-     * @return mixed
-     */
-    protected function getFormId($form)
-    {
-        return $form['ID'];
-    }
-
-    /**
      * Get notification data for metas
      * @param $actionData
      * @return array
@@ -452,6 +409,26 @@ class NinjaFormsMigrator extends BaseMigrator
                 'bcc' => ArrayHelper::get($actionData, 'bcc'),
             ];
         return $notification;
+    }
+
+    /**
+     * Get form settings
+     * @param $form
+     * @return array $formSettings
+     */
+    protected function getFormSettings($form)
+    {
+        $formData = Ninja_Forms()->form($form['ID'])->get();
+        return $formData->get_settings();
+    }
+
+    /**
+     * @param $form
+     * @return mixed
+     */
+    protected function getFormId($form)
+    {
+        return $form['ID'];
     }
 
     /**
