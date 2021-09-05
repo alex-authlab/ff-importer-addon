@@ -71,7 +71,8 @@ class NinjaFormsMigrator extends BaseMigrator
             'class' => $field['element_class'],
         ]);
 
-        
+        // Todo
+        $this->getErrorMessages($form);
 
         $returnData = [
             'fields' => $fluentFields,
@@ -98,6 +99,7 @@ class NinjaFormsMigrator extends BaseMigrator
             'value' => ArrayHelper::get($field, 'value', ''),
             'help_message' => ArrayHelper::get($field, 'desc_text'),
             'container_class' => ArrayHelper::get($field, 'container_class'),
+            'message' => 'test',
         ];
 
         $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
@@ -294,7 +296,7 @@ class NinjaFormsMigrator extends BaseMigrator
                 }
                 $actionData = $action->get_settings();
 
-                //var_dump($formSettings);
+            //var_dump($formSettings);
 
                 if ($actionData['type'] == 'email') {
                     $formMeta['notifications'] [] = $this->getNotificationData($actionData);
@@ -337,19 +339,23 @@ class NinjaFormsMigrator extends BaseMigrator
             'error_message' => '',
             'validation_type' => 'fail_on_condition_met'
         ];
+
         $defaults['restrictions']['requireLogin'] = [
             'enabled' => ArrayHelper::isTrue($formSettings, 'logged_in', false),
             'requireLoginMsg' => $formSettings['not_logged_in_msg']
         ];
+
         $defaults['restrictions']['limitNumberOfEntries'] = [
             'enabled' => isset($formSettings['sub_limit_number']),
             'numberOfEntries' => $formSettings['sub_limit_number'],
             'limitReachedMsg' => $formSettings['sub_limit_msg']
         ];
+
         $formMeta['formSettings']['restrictions'] = $defaults['restrictions'];
         $formMeta['formSettings']['layout'] = $defaults['layout'];
         $formMeta['advancedValidationSettings'] = $advancedValidation;
         $formMeta['delete_entry_on_submission'] = 'no';
+
         return $formMeta;
     }
 
@@ -389,6 +395,23 @@ class NinjaFormsMigrator extends BaseMigrator
     {
         $formData = Ninja_Forms()->form($form['ID'])->get();
         return $formData->get_settings();
+    }
+
+    /**
+     * Get all Error Messages
+     * @param $form
+     * @return array $
+     */
+    protected function getErrorMessages($form) {
+        $formSettings = $this->getFormSettings($form);
+        $errorMessages = [];
+
+        $errorMessages = [
+            'requiredError' => $formSettings['fieldsMarkedRequired']
+        ];
+
+        //var_dump($errorMessages);
+        return $errorMessages;
     }
 
     /**

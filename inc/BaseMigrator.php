@@ -580,6 +580,7 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
                     'advanced_options' => $args['options'],
+                    'calc_value_status' => $args['calc_value_status'],
                     'enable_image_input' => $args['enable_image_input'],
                     'randomize_options' => 'no',
                     'validation_rules' => [
@@ -618,7 +619,7 @@ abstract class BaseMigrator
                     'help_message' => $args['help_message'],
                     'advanced_options' => $args['options'],
                     'layout_class' => $args['layout_class'],
-                    'calc_value_status' => false,
+                    'calc_value_status' => $args['calc_value_status'],
                     'enable_image_input' => $args['enable_image_input'],
                     'validation_rules' => [
                         'required' => [

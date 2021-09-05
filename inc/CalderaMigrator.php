@@ -107,6 +107,9 @@ class CalderaMigrator extends BaseMigrator
                 case 'input_checkbox':
                 case 'dropdown':
                     $args['options'] = $this->getOptions(ArrayHelper::get($field, 'config.option', []));
+                    $args['calc_value_status'] = ArrayHelper::get($field, 'config.show_values') ? true : false;
+                    
+                    // Toggle switch field in Caldera
                     $isBttnType = ArrayHelper::get($field, 'type') == 'toggle_switch' ? true : false;
                     if ($isBttnType) {
                         $args['layout_class'] = 'ff_list_buttons'; //for btn type radio
@@ -114,6 +117,7 @@ class CalderaMigrator extends BaseMigrator
                     break;
                 case 'multi_select':
                     $args['options'] = $this->getOptions(ArrayHelper::get($field, 'config.option', []));
+                    $args['calc_value_status'] = ArrayHelper::get($field, 'config.show_values') ? true : false;
                     break;
                 case 'input_date':
                     $args['format'] = Arrayhelper::get($field, 'config.format');
