@@ -93,7 +93,7 @@ class NinjaFormsMigrator extends BaseMigrator
             'name' => ArrayHelper::get($field, 'key', $type . '-' . uniqid()),
             'placeholder' => ArrayHelper::get($field, 'placeholder', ''),
             'class' => ArrayHelper::get($field, 'element_class', ''),
-            'value' => ArrayHelper::get($field, 'value', ''),
+            'value' => $this->dynamicShortcodeConverter(ArrayHelper::get($field, 'value', '')),
             'help_message' => ArrayHelper::get($field, 'desc_text'),
             'container_class' => ArrayHelper::get($field, 'container_class'),
         ];
@@ -296,7 +296,7 @@ class NinjaFormsMigrator extends BaseMigrator
                     $formMeta['notifications'] [] = $this->getNotificationData($actionData);
                 } elseif ($actionData['type'] == 'successmessage') {
                     $formMeta['formSettings']['confirmation'] = [
-                        'messageToShow' => $actionData['success_msg'],
+                        'messageToShow' => $this->dynamicShortcodeConverter($actionData['success_msg']),
                         'samePageFormBehavior' => ($formSettings['hide_complete']) ? 'hide_form' : 'reset_form',
                         'redirectTo' => 'samePage'
                     ];
@@ -310,7 +310,7 @@ class NinjaFormsMigrator extends BaseMigrator
                     }
                 } elseif ($actionData['type'] == 'redirect') {
                     $formMeta['formSettings']['confirmation'] = [
-                        'messageToShow' => $actionData['success_msg'],
+                        'messageToShow' => $this->dynamicShortcodeConverter($actionData['success_msg']),
                         'samePageFormBehavior' => isset($form['hide_form']) ? 'hide_form' : 'reset_form',
                         'redirectTo' => 'customUrl',
                         'customUrl' => $actionData['redirect_url'],
@@ -387,12 +387,18 @@ class NinjaFormsMigrator extends BaseMigrator
      */
     private function getNotificationData($actionData)
     {
+
+        // Convert all shortcodes
+        $actionData['to'] = $this->dynamicShortcodeConverter($actionData['to']);
+        $actionData['reply_to'] = $this->dynamicShortcodeConverter($actionData['reply_to']);
+        $actionData['email_subject'] = $this->dynamicShortcodeConverter($actionData['email_subject']);
+        $actionData['email_message'] = $this->dynamicShortcodeConverter($actionData['email_message']);        
         
         $notification =
             [
                 'sendTo' => [
                     'type' => 'email',
-                    'email' => ($actionData['to'] == '{wp:admin_email}') || ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
+                    'email' => ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
                     'fromEmail' => $actionData['from_address'],
                     'field' => 'email',
                     'routing' => '',
@@ -400,15 +406,71 @@ class NinjaFormsMigrator extends BaseMigrator
                 'enabled' => ArrayHelper::isTrue($actionData, 'active'),
                 'name' => $actionData['label'],
                 'subject' => $actionData['email_subject'],
-                'to' => ($actionData['to'] == '{wp:admin_email}') || ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
+                'to' => ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
                 'replyTo' => ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['reply_to'],
-                'message' => " <p>{all_data}</p>\n
-                                    <p>This form submitted at: {embed_post.permalink}</p>",
+                'message' => $actionData['email_message'],
                 'fromName' => ArrayHelper::get($actionData, 'from_name'),
                 'fromAddress' => ArrayHelper::get($actionData, 'from_address'),
                 'bcc' => ArrayHelper::get($actionData, 'bcc'),
             ];
         return $notification;
+    }
+
+    /**
+     * Convert Ninja Forms merge Tags to Fluent forms dynamic shortcodes.
+     * @param $msg
+     * @return string
+     */
+    private function dynamicShortcodeConverter($msg) {
+
+        $shortcodes = $this->dynamicShortcodes();
+
+        $msg = str_replace(array_keys($shortcodes), array_values($shortcodes), $msg);
+
+        return $msg;
+    }
+
+    /**
+     * Get shortcode in fluentforms format
+     * @return array
+     */
+    protected function dynamicShortcodes()
+    {
+        $dynamicShortcodes = [
+            // Input Options
+            'field:' => 'inputs.',
+            '{all_fields_table}' => '{all_data}',
+            '{fields_table}' => '{all_data}',
+            // General Smartcodes
+            '{wp:site_title}' => '{wp.site_title}',
+            '{wp:site_url}' => '{wp.site_url}',
+            '{wp:admin_email}' => '{wp.admin_email}',
+            '{other:user_ip}' => '{ip}',
+            '{other:date}' => '{date.d/m/Y}',
+            '{other:time}' => '',
+            '{wp:post_id}' => '{embed_post.ID}',
+            '{wp:post_title}' => '{embed_post.post_title}',
+            '{wp:post_url}' => '{embed_post.permalink}',
+            '{wp:post_author}' => '',
+            '{wp:post_author_email}' => '',
+            '{post_meta:YOUR_META_KEY}' => '{embed_post.meta.YOUR_META_KEY}',
+            '{wp:user_id}' => '{user.ID}',
+            '{wp:user_first_name}' => '{user.first_name}',
+            '{wp:user_last_name}' => '{user.last_name}',
+            '{wp:user_username}' => '{user.user_login}',
+            '{wp:user_display_name}' => '{user.display_name}',
+            '{wp:user_email}' => '{user.user_email}',
+            '{wp:user_url}' => '{wp.site_url}',
+            '{user_meta:YOUR_META_KEY}' => '',
+            // Entry Attributes
+            '{form:id}' => '',
+            '{form:title}' => '',
+            '{submission:sequence}' => '{submission.serial_number}',
+            '{submission:count}' => '{submission.serial_number}',
+            'querystring:' => 'get.'
+        ];
+
+        return $dynamicShortcodes;
     }
 
     /**
