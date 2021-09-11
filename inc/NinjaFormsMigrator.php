@@ -56,13 +56,20 @@ class NinjaFormsMigrator extends BaseMigrator
     {
         $fluentFields = [];
         $fields = ArrayHelper::get($form, 'fields');
+
         foreach ($fields as $field) {
             list($type, $args) = $this->formatFieldData($field);
             if ($value = $this->getFluentClassicField($type, $args)) {
                 $fluentFields[$field['key']] = $value;
             }
-
         }
+
+        $submitBtn = $this->getSubmitBttn([
+            'uniqElKey' => $field['key'],
+            'label' => $field['label'],
+            'class' => $field['element_class'],
+        ]);
+
         $returnData = [
             'fields' => $fluentFields,
             'submitButton' => $this->submitBtn
@@ -77,8 +84,7 @@ class NinjaFormsMigrator extends BaseMigrator
      */
     protected function formatFieldData($field)
     {
-        // Get Correct field type
-        $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
+
         $args = [
             'uniqElKey' => $field['key'],
             'index' => $field['order'],
@@ -87,11 +93,15 @@ class NinjaFormsMigrator extends BaseMigrator
             'name' => ArrayHelper::get($field, 'key', $type . '-' . uniqid()),
             'placeholder' => ArrayHelper::get($field, 'placeholder', ''),
             'class' => ArrayHelper::get($field, 'element_class', ''),
-            'value' => ArrayHelper::get($field, 'value', ''),
-            'help_message' => ArrayHelper::get($field, 'help_text', ''),
+            'value' => $this->dynamicShortcodeConverter(ArrayHelper::get($field, 'value', '')),
+            'help_message' => ArrayHelper::get($field, 'desc_text'),
             'container_class' => ArrayHelper::get($field, 'container_class'),
         ];
+
+        $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
+
         switch ($type) {
+
             case 'select':
             case 'input_radio':
             case 'input_checkbox':
@@ -105,6 +115,11 @@ class NinjaFormsMigrator extends BaseMigrator
                     $optionsData = $this->getOptions(ArrayHelper::get($field, 'image_options', []), $hasImage = true);
                     $args['options'] = $optionsData['options'];
                     $args['value'] = ArrayHelper::get($optionsData, 'selectedOption.0', '');
+
+                    if (ArrayHelper::isTrue($field, 'allow_multi_select')) {
+                        $type = 'input_checkbox';
+                    }
+                    
                 } else {
                     if ($field['type'] == 'checkbox' && empty($args['options'])) {
                         //single item checkbox
@@ -139,6 +154,9 @@ class NinjaFormsMigrator extends BaseMigrator
                 $args['step'] = $field['num_step'];
                 $args['min'] = $field['num_min'];
                 $args['max'] = $field['num_max'];
+                break;
+            case 'input_hidden':
+                $args['value'] = ArrayHelper::get($field, 'default', '');
                 break;
             case 'ratings':
                 $number = ArrayHelper::get($field, 'number_of_stars', 5);
@@ -196,7 +214,7 @@ class NinjaFormsMigrator extends BaseMigrator
             'address' => 'input_text',
             'city' => 'input_text',
             'zip' => 'input_text',
-            'liststate' => 'input_text',
+            'liststate' => 'select',
             'firstname' => 'input_text',
             'lastname' => 'input_text',
             'listcountry' => 'select_country',
@@ -265,7 +283,6 @@ class NinjaFormsMigrator extends BaseMigrator
         $defaults = $formObject->getFormsDefaultSettings();
         $formSettings = $this->getFormSettings($form);
 
-
         $formMeta = [];
         $actions = Ninja_Forms()->form($this->getFormId($form))->get_actions();
         if(is_array($actions)){
@@ -279,9 +296,8 @@ class NinjaFormsMigrator extends BaseMigrator
                     $formMeta['notifications'] [] = $this->getNotificationData($actionData);
                 } elseif ($actionData['type'] == 'successmessage') {
                     $formMeta['formSettings']['confirmation'] = [
-                        'messageToShow' => $actionData['message'],
-                        'samePageFormBehavior' => $formSettings['clear_complete'] == 1 ? 'reset_form' : '',
-                        'samePageFormBehavior' => $formSettings['hide_complete'] == 1 ? 'hide_form' : '',
+                        'messageToShow' => $this->dynamicShortcodeConverter($actionData['success_msg']),
+                        'samePageFormBehavior' => ($formSettings['hide_complete']) ? 'hide_form' : 'reset_form',
                         'redirectTo' => 'samePage'
                     ];
                 } elseif ($actionData['type'] == 'save') {
@@ -294,7 +310,7 @@ class NinjaFormsMigrator extends BaseMigrator
                     }
                 } elseif ($actionData['type'] == 'redirect') {
                     $formMeta['formSettings']['confirmation'] = [
-                        'messageToShow' => $actionData['success_msg'],
+                        'messageToShow' => $this->dynamicShortcodeConverter($actionData['success_msg']),
                         'samePageFormBehavior' => isset($form['hide_form']) ? 'hide_form' : 'reset_form',
                         'redirectTo' => 'customUrl',
                         'customUrl' => $actionData['redirect_url'],
@@ -317,14 +333,23 @@ class NinjaFormsMigrator extends BaseMigrator
             'error_message' => '',
             'validation_type' => 'fail_on_condition_met'
         ];
+
         $defaults['restrictions']['requireLogin'] = [
             'enabled' => ArrayHelper::isTrue($formSettings, 'logged_in', false),
             'requireLoginMsg' => $formSettings['not_logged_in_msg']
         ];
+
+        $defaults['restrictions']['limitNumberOfEntries'] = [
+            'enabled' => isset($formSettings['sub_limit_number']),
+            'numberOfEntries' => $formSettings['sub_limit_number'],
+            'limitReachedMsg' => $formSettings['sub_limit_msg']
+        ];
+
         $formMeta['formSettings']['restrictions'] = $defaults['restrictions'];
         $formMeta['formSettings']['layout'] = $defaults['layout'];
         $formMeta['advancedValidationSettings'] = $advancedValidation;
         $formMeta['delete_entry_on_submission'] = 'no';
+
         return $formMeta;
     }
 
@@ -356,6 +381,99 @@ class NinjaFormsMigrator extends BaseMigrator
     }
 
     /**
+     * Get notification data for metas
+     * @param $actionData
+     * @return array
+     */
+    private function getNotificationData($actionData)
+    {
+
+        // Convert all shortcodes
+        $actionData['to'] = $this->dynamicShortcodeConverter($actionData['to']);
+        $actionData['reply_to'] = $this->dynamicShortcodeConverter($actionData['reply_to']);
+        $actionData['email_subject'] = $this->dynamicShortcodeConverter($actionData['email_subject']);
+        $actionData['email_message'] = $this->dynamicShortcodeConverter($actionData['email_message']);        
+        
+        $notification =
+            [
+                'sendTo' => [
+                    'type' => 'email',
+                    'email' => ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
+                    'fromEmail' => $actionData['from_address'],
+                    'field' => 'email',
+                    'routing' => '',
+                ],
+                'enabled' => ArrayHelper::isTrue($actionData, 'active'),
+                'name' => $actionData['label'],
+                'subject' => $actionData['email_subject'],
+                'to' => ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
+                'replyTo' => ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['reply_to'],
+                'message' => $actionData['email_message'],
+                'fromName' => ArrayHelper::get($actionData, 'from_name'),
+                'fromAddress' => ArrayHelper::get($actionData, 'from_address'),
+                'bcc' => ArrayHelper::get($actionData, 'bcc'),
+            ];
+        return $notification;
+    }
+
+    /**
+     * Convert Ninja Forms merge Tags to Fluent forms dynamic shortcodes.
+     * @param $msg
+     * @return string
+     */
+    private function dynamicShortcodeConverter($msg) {
+
+        $shortcodes = $this->dynamicShortcodes();
+
+        $msg = str_replace(array_keys($shortcodes), array_values($shortcodes), $msg);
+
+        return $msg;
+    }
+
+    /**
+     * Get shortcode in fluentforms format
+     * @return array
+     */
+    protected function dynamicShortcodes()
+    {
+        $dynamicShortcodes = [
+            // Input Options
+            'field:' => 'inputs.',
+            '{all_fields_table}' => '{all_data}',
+            '{fields_table}' => '{all_data}',
+            // General Smartcodes
+            '{wp:site_title}' => '{wp.site_title}',
+            '{wp:site_url}' => '{wp.site_url}',
+            '{wp:admin_email}' => '{wp.admin_email}',
+            '{other:user_ip}' => '{ip}',
+            '{other:date}' => '{date.d/m/Y}',
+            '{other:time}' => '',
+            '{wp:post_id}' => '{embed_post.ID}',
+            '{wp:post_title}' => '{embed_post.post_title}',
+            '{wp:post_url}' => '{embed_post.permalink}',
+            '{wp:post_author}' => '',
+            '{wp:post_author_email}' => '',
+            '{post_meta:YOUR_META_KEY}' => '{embed_post.meta.YOUR_META_KEY}',
+            '{wp:user_id}' => '{user.ID}',
+            '{wp:user_first_name}' => '{user.first_name}',
+            '{wp:user_last_name}' => '{user.last_name}',
+            '{wp:user_username}' => '{user.user_login}',
+            '{wp:user_display_name}' => '{user.display_name}',
+            '{wp:user_email}' => '{user.user_email}',
+            '{wp:user_url}' => '{wp.site_url}',
+            '{user_meta:YOUR_META_KEY}' => '',
+            // Entry Attributes
+            '{form:id}' => '',
+            '{form:title}' => '',
+            '{submission:sequence}' => '{submission.serial_number}',
+            '{submission:count}' => '{submission.serial_number}',
+            'querystring:' => 'get.'
+        ];
+
+        return $dynamicShortcodes;
+    }
+
+    /**
      * Get form settings
      * @param $form
      * @return array $formSettings
@@ -373,36 +491,6 @@ class NinjaFormsMigrator extends BaseMigrator
     protected function getFormId($form)
     {
         return $form['ID'];
-    }
-
-    /**
-     * Get notification data for metas
-     * @param $actionData
-     * @return array
-     */
-    private function getNotificationData($actionData)
-    {
-        $notification =
-            [
-                'sendTo' => [
-                    'type' => 'email',
-                    'email' => ($actionData['to'] == '{wp:admin_email}') || ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
-                    'fromEmail' => $actionData['from_address'],
-                    'field' => 'email',
-                    'routing' => '',
-                ],
-                'enabled' => ArrayHelper::isTrue($actionData, 'active'),
-                'name' => $actionData['label'],
-                'subject' => $actionData['email_subject'],
-                'to' => ($actionData['to'] == '{wp:admin_email}') || ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
-                'replyTo' => ($actionData['to'] == '{wp:admin_email}') || ($actionData['to'] == '{system:admin_email}') ? '{wp.admin_email}' : $actionData['to'],
-                'message' => " <p>{all_data}</p>\n
-                                    <p>This form submitted at: {embed_post.permalink}</p>",
-                'fromName' => ArrayHelper::get($actionData, 'from_name'),
-                'fromAddress' => ArrayHelper::get($actionData, 'from_address'),
-                'bcc' => ArrayHelper::get($actionData, 'bcc'),
-            ];
-        return $notification;
     }
 
     /**

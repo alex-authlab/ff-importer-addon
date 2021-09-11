@@ -145,6 +145,7 @@ abstract class BaseMigrator
             'conditional_logics' => [],
             'enable_image_input' => false,
             'calc_value_status' => false,
+            'dynamic_default_value' => '',
             'container_class' => '',
             'id' => '',
             'number_step' => '',
@@ -169,8 +170,10 @@ abstract class BaseMigrator
             'input_name_args'=>'',
             'is_time_enabled'=>'',
             'address_args'=>'',
-            'rows' => '3',
-            'cols' => ''
+            'rows' => '',
+            'cols' => '',
+            'enable_calculation' => false,
+            'calculation_formula' => ''
         ];
 
         $args = wp_parse_args($args, $defaults);
@@ -434,7 +437,7 @@ abstract class BaseMigrator
                     'validation_rules' => [
                         'required' => [
                             'value' => $args['required'],
-                            'message' => 'This field is required'
+                            'message' => 'This field is required',
                         ],
                         'email' => [
                             'value' => 1,
@@ -459,6 +462,7 @@ abstract class BaseMigrator
                     'name' => $args['name'],
                     'class' => $args['class'],
                     'id' => '',
+                    'value' => $args['value'],
                     'placeholder' => $args['placeholder'],
                     'rows' => $args['rows'],
                     'cols' => 2,
@@ -534,7 +538,7 @@ abstract class BaseMigrator
                     'multiple' => true,
                 ],
                 'settings' => [
-                    'dynamic_default_value' => '',
+                    'dynamic_default_value' => $args['dynamic_default_value'],
                     'help_message' => $args['help_message'],
                     'container_class' => $args['container_class'],
                     'label' => $args['label'],
@@ -543,7 +547,7 @@ abstract class BaseMigrator
                     'placeholder' => $args['placeholder'],
                     'max_selection' => '',
                     'advanced_options' => $args['options'],
-                    'calc_value_status' => false,
+                    'calc_value_status' => $args['calc_value_status'],
                     'enable_image_input' => false,
                     'validation_rules' => [
                         'required' => [
@@ -576,6 +580,7 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
                     'advanced_options' => $args['options'],
+                    'calc_value_status' => $args['calc_value_status'],
                     'enable_image_input' => $args['enable_image_input'],
                     'randomize_options' => 'no',
                     'validation_rules' => [
@@ -604,7 +609,7 @@ abstract class BaseMigrator
                     'type' => 'radio',
                 ],
                 'settings' => [
-                    'dynamic_default_value' => '',
+                    'dynamic_default_value' => $args['dynamic_default_value'],
                     'container_class' => '',
                     'admin_field_label' => $args['admin_field_label'],
                     'label_placement' => $args['label_placement'],
@@ -613,9 +618,8 @@ abstract class BaseMigrator
                     'label' => $args['label'],
                     'help_message' => $args['help_message'],
                     'advanced_options' => $args['options'],
-                    //'layout_class' => $args['is_button_type'] === true ? 'ff_list_buttons' : '',
                     'layout_class' => $args['layout_class'],
-                    'calc_value_status' => false,
+                    'calc_value_status' => $args['calc_value_status'],
                     'enable_image_input' => $args['enable_image_input'],
                     'validation_rules' => [
                         'required' => [
@@ -754,8 +758,8 @@ abstract class BaseMigrator
                     'label_placement' => $args['label_placement'],
                     'help_message' => $args['help_message'],
                     'number_step' => $args['step'],
-                    'prefix_label' => '',
-                    'suffix_label' => '',
+                    'prefix_label' => $args['prefix'],
+                    'suffix_label' => $args['suffix'],
                     'numeric_formatter' => '',
                     'validation_rules' => [
                         'required' => [
@@ -777,8 +781,8 @@ abstract class BaseMigrator
                     ],
                     'conditional_logics' => [],
                     'calculation_settings' => [
-                        'status' => false,
-                        'formula' => ''
+                        'status' => $args['enable_calculation'],
+                        'formula' => $args['calculation_formula']
                     ],
                 ],
                 'editor_options' => [
@@ -1051,8 +1055,8 @@ abstract class BaseMigrator
                     'container_class' => $args['container_class'],
                     'label' => $args['label'],
                     'admin_field_label' => '',
-                    'label_placement' => '',
-                    'help_message' => '',
+                    'label_placement' => $args['label_placement'],
+                    'help_message' => $args['help_message'],
                     'enable_select_2' => 'no',
                     'validation_rules' => [
                         'required' => [

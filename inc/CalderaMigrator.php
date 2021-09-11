@@ -53,6 +53,7 @@ class CalderaMigrator extends BaseMigrator
             }
         }
 
+        
         $returnData = [
             'fields' => $this->getContainer($form, $fluentFields),
             'submitButton' => $this->submitBtn
@@ -106,16 +107,38 @@ class CalderaMigrator extends BaseMigrator
                 case 'input_checkbox':
                 case 'dropdown':
                     $args['options'] = $this->getOptions(ArrayHelper::get($field, 'config.option', []));
-                    $args['enable_select_2'] = ArrayHelper::get($field, 'type') == 'filtered_select2' ? 'yes' : 'no';
+                    $args['calc_value_status'] = ArrayHelper::get($field, 'config.show_values') ? true : false;
+                    
+                    // Toggle switch field in Caldera
                     $isBttnType = ArrayHelper::get($field, 'type') == 'toggle_switch' ? true : false;
                     if ($isBttnType) {
                         $args['layout_class'] = 'ff_list_buttons'; //for btn type radio
                     }
                     break;
+                case 'multi_select':
+                    $args['options'] = $this->getOptions(ArrayHelper::get($field, 'config.option', []));
+                    $args['calc_value_status'] = ArrayHelper::get($field, 'config.show_values') ? true : false;
+                    break;
                 case 'input_date':
                     $args['format'] = Arrayhelper::get($field, 'config.format');
                     break;
                 case 'input_number':
+                    $args['step'] = $field['config']['step'];
+                    $args['min'] = $field['config']['min'];
+                    $args['max'] = $field['config']['max'];
+
+                    // Caldera Calculation field
+                    if(ArrayHelper::get($field, 'type') == 'calculation') {
+                        $args['prefix'] = $field['config']['before'];
+                        $args['suffix'] = $field['config']['after'];
+
+                        if (ArrayHelper::isTrue($field, 'config.manual') || !empty(Arrayhelper::get($field, 'config.formular'))) {
+                            $args['enable_calculation'] = true;
+                            $args['calculation_formula'] = $this->convertFormulas($field, $form);
+                        } 
+                    }
+                    
+                    break;
                 case 'rangeslider':
                     $args['step'] = $field['config']['step'];
                     $args['min'] = $field['config']['min'];
@@ -170,6 +193,43 @@ class CalderaMigrator extends BaseMigrator
         return '';
     }
 
+    // Function to convert shortcodes in numeric field calculations (todo)
+    private function convertFormulas($calculationField, $form) {
+
+        $calderaFormula;
+        $fieldSlug = [];
+        $fieldID = [];
+
+        foreach ($form['fields'] as $field) {
+            $prefixTypes = ArrayHelper::get($this->fieldPrefix(), $field['type'], '');   
+            
+            // FieldSlug for Manual Formula   
+            $fieldSlug[$field['slug']] = '{' . $prefixTypes . '.' . $field['slug'] . '}';
+            
+            // FieldID for Direct Formula
+            $fieldID[$field['ID']] = '{' . $prefixTypes . '.' . $field['slug'] . '}';        
+        }
+
+        // Check if Manual Formula Enabled in Caldera Otherwise get Direct Formula
+        if (!empty($calculationField['config']['manual'])) {
+
+            $calderaFormula = $calculationField['config']['manual_formula'];
+            
+            $refactorShortcode = str_replace("%", "", $calderaFormula);
+            
+            $refactoredFormula = str_replace(array_keys($fieldSlug), array_values($fieldSlug), $refactorShortcode);    
+
+        } else if (!empty($calculationField['config']['formular'])) { 
+            
+            $calderaFormula = $calculationField['config']['formular'];  
+            
+            $refactoredFormula = str_replace(array_keys($fieldID), array_values($fieldID), $calderaFormula);
+
+        }
+
+        return $refactoredFormula;
+    }
+
     /**
      * @param $field
      * @return int
@@ -179,6 +239,26 @@ class CalderaMigrator extends BaseMigrator
         $fileSizeKilobyte = ceil(($fileSizeByte * 1024)/1000);
 
         return $fileSizeKilobyte;
+    }
+
+    /**
+     * @return array
+     */
+    public function fieldPrefix() 
+    {
+        $fieldPrefix = [
+            'number' => 'input',
+            'hidden' => 'input',
+            'range_slider' => 'input',
+            'calculation' => 'input',
+            'checkbox' => 'checkbox',
+            'radio' => 'radio',
+            'toggle_switch' => 'radio',
+            'dropdown' => 'select',
+            'filtered_select2' => 'select'
+        ];
+
+        return $fieldPrefix;
     }
 
     /**
@@ -199,13 +279,15 @@ class CalderaMigrator extends BaseMigrator
             'phone' => 'phone',
             'select' => 'select',
             'dropdown' => 'select',
-            'filtered_select2' => 'select',
+            'filtered_select2' => 'multi_select',
             'radio' => 'input_radio',
             'checkbox' => 'input_checkbox',
             'toggle_switch' => 'input_radio',
             'date_picker' => 'input_date',
+            'date' => 'input_date',
             'range' => 'input_number',
             'number' => 'input_number',
+            'calculation' => 'input_number',
             'range_slider' => 'rangeslider',
             'star_rating' => 'ratings',
             'file' => 'input_file',
