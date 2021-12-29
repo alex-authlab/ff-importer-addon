@@ -53,17 +53,17 @@ class CalderaMigrator extends BaseMigrator
             }
         }
 
-        
+
         $returnData = [
-            'fields' => $this->getContainer($form, $fluentFields),
+            'fields'       => $this->getContainer($form, $fluentFields),
             'submitButton' => $this->submitBtn
         ];
 
         if ($this->hasStep && defined('FLUENTFORMPRO')) {
             $returnData['stepsWrapper'] = $this->getStepWrapper();
         }
-        
-        return $returnData;
+
+        return json_encode($returnData);
     } 
 
     private function formatFieldData($field ,$form)
@@ -123,9 +123,9 @@ class CalderaMigrator extends BaseMigrator
                     $args['format'] = Arrayhelper::get($field, 'config.format');
                     break;
                 case 'input_number':
-                    $args['step'] = $field['config']['step'];
-                    $args['min'] = $field['config']['min'];
-                    $args['max'] = $field['config']['max'];
+                    $args['step'] = ArrayHelper::get($field,'config.step');
+                    $args['min'] = ArrayHelper::get($field,'config.min');
+                    $args['max'] = ArrayHelper::get($field,'config.max');
 
                     // Caldera Calculation field
                     if(ArrayHelper::get($field, 'type') == 'calculation') {
@@ -347,6 +347,7 @@ class CalderaMigrator extends BaseMigrator
                 $containerConfig[] = [
                     'index' => $row,
                     'element' => 'container',
+                    'attributes' => [],
                     'settings' => [
                         'container_class',
                         'conditional_logics'

@@ -57,7 +57,7 @@ class GravityFormsMigrator extends BaseMigrator
             $returnData['stepsWrapper'] = $this->getStepWrapper();
         }
 
-        return $returnData;
+        return json_encode($returnData);
     }
 
     private function formatFieldData(array $field)

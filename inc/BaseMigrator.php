@@ -1,6 +1,7 @@
 <?php
 
 
+use FluentForm\App\Modules\Form\FormFieldsParser;
 use FluentForm\Framework\Helpers\ArrayHelper;
 
 abstract class BaseMigrator
@@ -12,7 +13,6 @@ abstract class BaseMigrator
 
     public function __construct()
     {
-
         add_action('ff_import_forms_' . $this->key, [$this, 'import_forms']);
     }
 
@@ -42,7 +42,6 @@ abstract class BaseMigrator
             ]);
         }
 
-        $imported = 0;
         $failed = [];
         $refs = []; //todo
         $forms = $this->getForms();
@@ -53,46 +52,43 @@ abstract class BaseMigrator
             ]);
         }
 
-        if ($forms) {
-
-            $insertedForms = [];
-            if ($forms && is_array($forms)) {
+        $insertedForms = [];
+        if ($forms && is_array($forms)) {
                 foreach ($forms as $formItem) {
-                    // First of all make the form object.
-                    $formFields = json_encode([]);
-                    if ($fields = $this->getFields($formItem)) {
-                        $formFields = json_encode($fields);
+                    if ($this->getFields($formItem)) {
+                        $formFields = $this->getFields($formItem);
                     } else {
                         $failed[] = $this->getFormName($formItem);
                         continue;
                     }
                     $form = [
-                        'title' => $this->getFormName($formItem),
+                        'title'       => $this->getFormName($formItem),
                         'form_fields' => $formFields,
-                        'status' => 'published',
+                        'status'      => 'published',
                         'has_payment' => 0,
-                        'type' => 'form',
-                        'created_by' => get_current_user_id()
+                        'type'        => 'form',
+                        'created_by'  => get_current_user_id()
                     ];
                     $form['conditions'] = ''; //todo
                     $form['appearance_settings'] = ''; //todo
 
-                    // Insert the form to the DB.
-                    $formId = wpFluent()->table('fluentform_forms')->insert($form);
-                    $insertedForms[$formId] = [
-                        'title' => $form['title'],
-                        'edit_url' => admin_url('admin.php?page=fluent_forms&route=editor&form_id=' . $formId)
-                    ];
+                    if ($formId = $this->maybeUpdateForm($formItem)) {
+                        list($insertedForms, $refs) = $this->updateForm($formId,$formFields ,$form ,$insertedForms, $formItem, $refs);
+                    } else {
+
+                        list($insertedForms, $refs, $formId) = $this->insertForm($form, $insertedForms, $formItem, $refs);
+                    }
                     //get metas
                     $metas = $this->getFormMetas($formItem);
-                    $this->insertMetas($metas, $formId);
-                    do_action('fluentform_form_imported', $formId);
+                    $this->updateMetas($metas, $formId);
+
                 }
                 $msg = '';
                 if (count($failed) > 0) {
                     $msg = "These forms was not imported for invalid data : " . implode(', ',$failed);
                 }
                 if (count($insertedForms) > 0) {
+                    update_option('__ff_imorted_forms_map',$refs);
                     wp_send_json([
                         'message' => "Your forms has been successfully imported. " . $msg,
                         'inserted_forms' => $insertedForms
@@ -104,10 +100,9 @@ abstract class BaseMigrator
                 ], 200);
 
             }
-        }
 
         wp_send_json([
-            'message' => __('Export error, please try again.', 'fluentform')
+            'message' => __('Export error, please try again.', '')
         ], 422);
     }
 
@@ -1409,30 +1404,52 @@ abstract class BaseMigrator
      * @param $metas
      * @param $formId
      */
-    protected function insertMetas($metas, $formId)
+    protected function updateMetas($metas, $formId )
     {
         if ($metas) {
             //when multiple notifications
             if ($notifications = ArrayHelper::get($metas, 'notifications')) {
+                //remove previous notifications
+                (new \FluentForm\App\Modules\Form\Form(wpFluentForm()))->deleteMeta($formId ,'notifications');
                 foreach ($notifications as $notify) {
                     $settings = [
                         'form_id' => $formId,
                         'meta_key' => 'notifications',
                         'value' => json_encode($notify)
                     ];
+
                     wpFluent()->table('fluentform_form_meta')->insert($settings);
                 }
                 unset($metas['notifications']);
             }
             foreach ($metas as $metaKey => $metaData) {
-                $settings = [
-                    'form_id' => $formId,
-                    'meta_key' => $metaKey,
-                    'value' => json_encode($metaData)
-                ];
-                wpFluent()->table('fluentform_form_meta')->insert($settings);
+                (new \FluentForm\App\Modules\Form\Form(wpFluentForm()))->updateMeta($formId, $metaKey, $metaData);
             }
         }
+    }
+
+    /**
+     * @param array $form
+     * @param array $insertedForms
+     * @param $formItem
+     * @param array $refs
+     * @return array
+     */
+    public function insertForm( $form, $insertedForms, $formItem, $refs)
+    {
+        $formId = wpFluent()->table('fluentform_forms')->insert($form);
+        $insertedForms[$formId] = [
+            'title'    => $form['title'],
+            'edit_url' => admin_url('admin.php?page=fluent_forms&route=editor&form_id=' . $formId)
+        ];
+
+        //set refs
+        $refs[$this->getFormId($formItem)] = [
+            'fluentform_id' => $formId,
+            'form_type'     => $this->key,
+        ];
+        do_action('fluentform_form_imported', $formId);
+        return array($insertedForms, $refs ,$formId) ;
     }
 
     protected function getFileTypes($field, $arg) {
@@ -1451,6 +1468,59 @@ abstract class BaseMigrator
         }
         
         return array_unique($fileTypeOptions);
+    }
+
+    public function maybeUpdateForm($formItem)
+    {
+        $importedFormMap = get_option('__ff_imorted_forms_map');
+        if (is_array($importedFormMap)) {
+            foreach ($importedFormMap as $importedFormId => $value) {
+                if ($this->getFormId($formItem) === $importedFormId && $this->key === $value['form_type']) {
+                    $formId = $value['fluentform_id'];
+                    if (wpFluent()->table('fluentform_forms')->find($formId)) {
+                        return $formId;
+                    }
+                    return false;
+
+                }
+            }
+        }
+
+        return false;
+
+    }
+
+    public function updateForm($formId,$formFields ,$form ,$insertedForms, $formItem, $refs)
+    {
+        $data = [
+            'updated_at'  => current_time('mysql'),
+            'form_fields' => $formFields,
+        ];
+        wpFluent()->table('fluentform_forms')->where('id', $formId)->update($data);
+
+        $form =  wpFluent()->table('fluentform_forms')->find($formId);
+
+        $emailInputs = FormFieldsParser::getElement($form, ['input_email'], ['element', 'attributes']);
+        if($emailInputs) {
+            $emailInput = array_shift($emailInputs);
+            $emailInputName = ArrayHelper::get($emailInput, 'attributes.name');
+            (new \FluentForm\App\Modules\Form\Form(wpFluentForm()))->updateMeta($formId, '_primary_email_field', $emailInputName);
+        } else {
+            (new \FluentForm\App\Modules\Form\Form(wpFluentForm()))->updateMeta($formId, '_primary_email_field', '');
+        }
+        $insertedForms[$formId] = [
+            'title'    => $form->title,
+            'edit_url' => admin_url('admin.php?page=fluent_forms&route=editor&form_id=' . $formId)
+        ];
+
+        //set refs
+        $refs[$this->getFormId($formItem)] = [
+            'fluentform_id' => $formId,
+            'form_type'     => $this->key,
+        ];
+
+        return array($insertedForms,$refs);
+
     }
 
 

@@ -74,7 +74,7 @@ class NinjaFormsMigrator extends BaseMigrator
             'fields' => $fluentFields,
             'submitButton' => $this->submitBtn
         ];
-        return $returnData;
+        return json_encode($returnData);
     }
 
     /**
