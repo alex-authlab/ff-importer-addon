@@ -85,6 +85,8 @@ class NinjaFormsMigrator extends BaseMigrator
     protected function formatFieldData($field)
     {
 
+        $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
+
         $args = [
             'uniqElKey' => $field['key'],
             'index' => $field['order'],
@@ -98,7 +100,6 @@ class NinjaFormsMigrator extends BaseMigrator
             'container_class' => ArrayHelper::get($field, 'container_class'),
         ];
 
-        $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
 
         switch ($type) {
 
@@ -301,7 +302,7 @@ class NinjaFormsMigrator extends BaseMigrator
                         'redirectTo' => 'samePage'
                     ];
                 } elseif ($actionData['type'] == 'save') {
-                    $isAutoDelete = ArrayHelper::isTrue($actionData, 'set_subs_to_expire');
+                    $isAutoDelete = intval(ArrayHelper::get($actionData, 'set_subs_to_expire')) == 1;
                     if ($isAutoDelete) {
                         $formMeta['formSettings'] = [
                             'delete_after_x_days' => true,
@@ -340,7 +341,7 @@ class NinjaFormsMigrator extends BaseMigrator
         ];
 
         $defaults['restrictions']['limitNumberOfEntries'] = [
-            'enabled' => isset($formSettings['sub_limit_number']),
+            'enabled' => (intval($formSettings['sub_limit_number']) > 0),
             'numberOfEntries' => $formSettings['sub_limit_number'],
             'limitReachedMsg' => $formSettings['sub_limit_msg']
         ];
@@ -349,7 +350,6 @@ class NinjaFormsMigrator extends BaseMigrator
         $formMeta['formSettings']['layout'] = $defaults['layout'];
         $formMeta['advancedValidationSettings'] = $advancedValidation;
         $formMeta['delete_entry_on_submission'] = 'no';
-
         return $formMeta;
     }
 
@@ -490,7 +490,7 @@ class NinjaFormsMigrator extends BaseMigrator
      */
     protected function getFormId($form)
     {
-        return $form['ID'];
+        return intval($form['ID']);
     }
 
     /**

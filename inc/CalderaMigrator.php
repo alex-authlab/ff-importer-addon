@@ -53,7 +53,6 @@ class CalderaMigrator extends BaseMigrator
             }
         }
 
-
         $returnData = [
             'fields'       => $this->getContainer($form, $fluentFields),
             'submitButton' => $this->submitBtn
@@ -73,21 +72,21 @@ class CalderaMigrator extends BaseMigrator
         }
 
         $args = [
-            'uniqElKey' => $field['ID'],
-            'index' => $field['ID'], // get the order id from order array
-            'required' => isset($field['required']) ? true : false,
-            'label' => $field['label'],
+            'uniqElKey'       => $field['ID'],
+            'index'           => $field['ID'], // get the order id from order array
+            'required'        => isset($field['required']),
+            'label'           => $field['label'],
             'label_placement' => $this->getLabelPlacement($field),
-            'name' => $field['slug'],
-            'placeholder' => ArrayHelper::get($field, 'config.placeholder'),
-            'class' => $field['config']['custom_class'],
-            'value' => ArrayHelper::get($field, 'config.default'),
-            'help_message' => ArrayHelper::get($field, 'caption'),
+            'name'            => $field['slug'],
+            'placeholder'     => ArrayHelper::get($field, 'config.placeholder'),
+            'class'           => $field['config']['custom_class'],
+            'value'           => ArrayHelper::get($field, 'config.default'),
+            'help_message'    => ArrayHelper::get($field, 'caption'),
         ];
 
         $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
 
-            switch ($type) {
+        switch ($type) {
                 case 'input_text':
                     if (ArrayHelper::isTrue($field, 'config.masked')) {
                         $type = 'input_mask';
@@ -106,11 +105,14 @@ class CalderaMigrator extends BaseMigrator
                 case 'input_radio':
                 case 'input_checkbox':
                 case 'dropdown':
+                    if( $args['placeholder'] == ''){
+                        $args['placeholder'] = __('-Select-','ff-importer-addon');
+                    }
                     $args['options'] = $this->getOptions(ArrayHelper::get($field, 'config.option', []));
-                    $args['calc_value_status'] = ArrayHelper::get($field, 'config.show_values') ? true : false;
+                    $args['calc_value_status'] = (bool)ArrayHelper::get($field, 'config.show_values');
                     
                     // Toggle switch field in Caldera
-                    $isBttnType = ArrayHelper::get($field, 'type') == 'toggle_switch' ? true : false;
+                    $isBttnType = ArrayHelper::get($field, 'type') == 'toggle_switch';
                     if ($isBttnType) {
                         $args['layout_class'] = 'ff_list_buttons'; //for btn type radio
                     }
@@ -180,9 +182,9 @@ class CalderaMigrator extends BaseMigrator
                         'class' => $field['config']['custom_class'],
                     ]);
                     break;
-            }
+        }
 
-            return array($type, $args);
+        return array($type, $args);
 
     }
 
@@ -311,7 +313,7 @@ class CalderaMigrator extends BaseMigrator
         foreach ($options as $key => $option) {
             $formattedOptions[] = [
                 'label' => ArrayHelper::get($option, 'label', 'Item -' . $key),
-                'value' => ArrayHelper::get($option, 'value'),
+                'value' => $key,
                 'calc_value' => ArrayHelper::get($option, 'calc_value'),
                 'id' => $key
             ];
