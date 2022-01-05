@@ -29,5 +29,5 @@ define('FF_MIG_DIR_URL', plugin_dir_url( __FILE__ ));
 
 require_once FF_MIG_DIR_PATH.'inc/Bootstrap.php';
 add_action('plugins_loaded',function(){
-    (new Bootstrap())->init();
+    (new \FF_Importer\Bootstrap())->init();
 });

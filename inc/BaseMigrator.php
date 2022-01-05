@@ -1,5 +1,6 @@
 <?php
 
+namespace FF_Importer;
 
 use FluentForm\App\Modules\Form\FormFieldsParser;
 use FluentForm\Framework\Helpers\ArrayHelper;
@@ -33,9 +34,8 @@ abstract class BaseMigrator
         do_action('ff_import_forms_' . $type);
     }
 
-    public function import_forms($data)
+    public function import_forms($formId = false)
     {
-        // check if installed
         if (!$this->exist()) {
             wp_send_json_error([
                 'message' => sprintf(__('%s is not installed.', 'fluentforms'), $this->title),
@@ -43,9 +43,13 @@ abstract class BaseMigrator
         }
 
         $failed = [];
-        $refs = []; //todo
-        $forms = $this->getForms();
+        $refs = [];
 
+        if ($formId && $form = $this->getForm($formId)) {
+            $forms[] = $form;
+        } else {
+            $forms = $this->getForms();
+        }
         if (!$forms) {
             wp_send_json_error([
                 'message' => __('No forms found!', 'fluentforms'),
@@ -53,6 +57,8 @@ abstract class BaseMigrator
         }
 
         $insertedForms = [];
+        $refs = get_option('__ff_imorted_forms_map');
+        $refs = is_array($refs) ? $refs : [];
         if ($forms && is_array($forms)) {
             foreach ($forms as $formItem) {
                 if ($this->getFields($formItem)) {
@@ -72,21 +78,19 @@ abstract class BaseMigrator
                 $form['conditions'] = ''; //todo
                 $form['appearance_settings'] = ''; //todo
 
-                if ($formId = $this->maybeUpdateForm($formItem)) {
-                    $insertedForms = $this->updateForm( $formId, $formFields, $insertedForms );
+                if ($formId = $this->isAlreadyImported($formItem)) {
+                    $insertedForms = $this->updateForm($formId, $formFields, $insertedForms);
                 } else {
-
                     list($insertedForms, $formId) = $this->insertForm($form, $insertedForms, $formItem);
                 }
                 //get metas
                 $metas = $this->getFormMetas($formItem);
                 $this->updateMetas($metas, $formId);
 
-                $refs = get_option('__ff_imorted_forms_map', $refs);
-                $refs = is_array($refs) ? $refs : [];
+
                 $refs[$formId] = [
-                    'imported_form_id'   => $this->getFormId($formItem),
-                    'form_type' => $this->key,
+                    'imported_form_id' => $this->getFormId($formItem),
+                    'form_type'        => $this->key,
                 ];
 
 
@@ -1485,20 +1489,24 @@ abstract class BaseMigrator
         return array_unique($fileTypeOptions);
     }
 
-    public function maybeUpdateForm($formItem)
+    public function isAlreadyImported($formItem)
     {
         $importedFormMap = get_option('__ff_imorted_forms_map');
+        $deletedForms = [];
         if (is_array($importedFormMap)) {
             foreach ($importedFormMap as $fluentFormId => $value) {
-                if ($this->getFormId($formItem) == ArrayHelper::get($value,'imported_form_id') && $this->key == ArrayHelper::get($value,'form_type')) {
+                if ($this->getFormId($formItem) == ArrayHelper::get($value,
+                        'imported_form_id') && $this->key == ArrayHelper::get($value, 'form_type')) {
 
                     if (wpFluent()->table('fluentform_forms')->find($fluentFormId)) {
                         return $fluentFormId;
                     }
-                    return false;
+                    unset($importedFormMap[$fluentFormId]);
 
                 }
             }
+            update_option('__ff_imorted_forms_map',$importedFormMap);
+            return false;
         }
 
         return false;
@@ -1532,6 +1540,90 @@ abstract class BaseMigrator
 
         return $insertedForms;
 
+    }
+
+    public function insertEntries($fluentFormId, $importFormId)
+    {
+        if (!wpFluent()->table('fluentform_forms')->find($fluentFormId)) {
+            wp_send_json_error([
+                'message' => __("Could not find form ,please import again", 'fluentform')
+            ], 422);
+        }
+        $entries = $this->getEntries($importFormId);
+        if (!is_array($entries) || empty($entries)) {
+            wp_send_json([
+                'message'        => "No Entries Found",
+            ], 200);
+            return;
+        }
+        //delete prev entries
+        $this->resetEntries($fluentFormId);
+
+        foreach ($entries as $key => $entry) {
+            vdd($entry);
+            if (empty($entry)) {
+                continue;
+            }
+            $previousItem = wpFluent()->table('fluentform_submissions')
+                ->where('form_id', $fluentFormId)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            $serialNumber = 1;
+
+            if ($previousItem) {
+                $serialNumber = $previousItem->serial_number + 1;
+            }
+
+            $insertData = [
+                'form_id'       => $fluentFormId,
+                'serial_number' => $serialNumber,
+                'response'      => json_encode($entry),
+                'source_url'    => '',
+                'user_id'       => get_current_user_id(),
+                'browser'       => '',
+                'device'        => '',
+                'ip'            => '',
+                'created_at'    => current_time('mysql'),
+                'updated_at'    => current_time('mysql')
+            ];
+            $insertId = wpFluent()->table('fluentform_submissions')->insert($insertData);
+
+            $uidHash = md5(wp_generate_uuid4() . $insertId);
+
+            \FluentForm\App\Helpers\Helper::setSubmissionMeta($insertId, '_entry_uid_hash', $uidHash, $fluentFormId);
+            $entries = new \FluentForm\App\Modules\Entries\Entries();
+            $entries->recordEntryDetails($insertId, $fluentFormId, $entry);
+
+            wp_send_json([
+                'message' => __("Entries Imported Successfully",'')
+            ], 200);
+
+        }
+
+    }
+
+    private function resetEntries($formId)
+    {
+        wpFluent()->table('fluentform_submissions')
+            ->where('form_id', $formId)
+            ->delete();
+
+        wpFluent()->table('fluentform_submission_meta')
+            ->where('form_id', $formId)
+            ->delete();
+
+        wpFluent()->table('fluentform_entry_details')
+            ->where('form_id', $formId)
+            ->delete();
+        wpFluent()->table('fluentform_form_analytics')
+            ->where('form_id', $formId)
+            ->delete();
+
+        wpFluent()->table('fluentform_logs')
+            ->where('parent_source_id', $formId)
+            ->whereIn('source_type', ['submission_item', 'form_item', 'draft_submission_meta'])
+            ->delete();
     }
 
 

@@ -1,4 +1,5 @@
 <?php
+namespace FF_Importer;
 
 use FluentForm\App\Modules\Form\Form;
 use FluentForm\Framework\Helpers\ArrayHelper;

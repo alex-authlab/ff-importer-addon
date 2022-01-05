@@ -1,5 +1,7 @@
 <?php
 
+namespace FF_Importer;
+
 
 use FluentForm\App\Modules\Form\Form;
 use FluentForm\Framework\Helpers\ArrayHelper;
@@ -29,9 +31,28 @@ class CalderaMigrator extends BaseMigrator
     public function getForms()
     {
         $forms = [];
-        $items = Caldera_Forms_Forms::get_forms();
+        $items = \Caldera_Forms_Forms::get_forms();
         foreach ($items as $item) {
-            $forms[] = Caldera_Forms_Forms::get_form($item);
+            $forms[] = \Caldera_Forms_Forms::get_form($item);
+        }
+        return $forms;
+    }
+    public function getForm($id)
+    {
+        return \Caldera_Forms_Forms::get_form($id);
+    }
+    //todo check annd add imported forms for import entries
+    public function getFormsFormatted()
+    {
+        $forms = [];
+        $items = \Caldera_Forms_Forms::get_forms();
+        foreach ($items as $item) {
+            $item = \Caldera_Forms_Forms::get_form($item);
+            $forms[] = [
+                'name'           => $this->getFormName($item),
+                'id'             => $this->getFormId($item),
+                'imported_ff_id' => $this->isAlreadyImported($item),
+            ];
         }
         return $forms;
     }
@@ -43,8 +64,7 @@ class CalderaMigrator extends BaseMigrator
     public function getFields($form)
     {
         $fluentFields = [];
-        $fields = Caldera_Forms_Forms::get_fields($form);
-
+        $fields = \Caldera_Forms_Forms::get_fields($form);
         foreach ($fields as $name => $field) {
             $field = (array)$field;
             list($type, $args) = $this->formatFieldData($field , $form);
@@ -87,7 +107,8 @@ class CalderaMigrator extends BaseMigrator
         $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
 
         switch ($type) {
-                case 'input_text':
+            case 'phone':
+            case 'input_text':
                     if (ArrayHelper::isTrue($field, 'config.masked')) {
                         $type = 'input_mask';
                         $args['temp_mask'] = 'custom';
@@ -115,6 +136,9 @@ class CalderaMigrator extends BaseMigrator
                     $isBttnType = ArrayHelper::get($field, 'type') == 'toggle_switch';
                     if ($isBttnType) {
                         $args['layout_class'] = 'ff_list_buttons'; //for btn type radio
+                    }
+                    if($type == 'section_break') {
+                        $args['label'] = '';
                     }
                     break;
                 case 'multi_select':
@@ -198,7 +222,7 @@ class CalderaMigrator extends BaseMigrator
     // Function to convert shortcodes in numeric field calculations (todo)
     private function convertFormulas($calculationField, $form) {
 
-        $calderaFormula;
+        $calderaFormula = '';
         $fieldSlug = [];
         $fieldID = [];
 
@@ -511,6 +535,28 @@ class CalderaMigrator extends BaseMigrator
     protected function getFormName($form)
     {
         return $form['name'];
+    }
+
+    public function getEntries($formId){
+
+        $form = \Caldera_Forms::get_form($formId);
+        $data = \Caldera_Forms_Admin::get_entries( $form, 1, 999 );
+        $entries = [];
+        if(!is_array(ArrayHelper::get($data,'entries'))){
+            return $entries;
+        }
+        foreach ($data['entries'] as $entry){
+
+            $entryId =  ArrayHelper::get($entry,'_entry_id');
+            $entryFields = ArrayHelper::get(\Caldera_Forms::get_entry( $entryId, $form ) , 'data');
+            $formattedEntry = [];
+            foreach ($entryFields as $key => $field){
+                $formattedEntry[$key] = $field['value'];
+            }
+            $entries[] = $formattedEntry;
+
+        }
+        return  $entries;
     }
 
 }

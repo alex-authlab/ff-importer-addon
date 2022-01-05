@@ -1,5 +1,6 @@
 <?php
 
+namespace FF_Importer;
 
 use \FluentForm\App\Modules\Form\Form;
 use \FluentForm\Framework\Helpers\ArrayHelper;
@@ -30,7 +31,7 @@ class NinjaFormsMigrator extends BaseMigrator
     public function getForms()
     {
         $forms = [];
-        $items = (new NF_Database_FormsController())->getFormsData();
+        $items = (new \NF_Database_FormsController())->getFormsData();
         foreach ($items as $item) {
             $fields = Ninja_Forms()->form($item->id)->get_fields();
             $field_settings = [];
@@ -41,6 +42,19 @@ class NinjaFormsMigrator extends BaseMigrator
                 'ID' => $item->id,
                 'name' => $item->title,
                 'fields' => $field_settings,
+            ];
+        }
+        return $forms;
+    }
+    public function getFormsFormatted()
+    {
+        $forms = [];
+        $items = $this->getForms();
+        foreach ($items as $item) {
+            $forms[] = [
+                'name'           => $this->getFormName($item),
+                'id'             => $this->getFormId($item),
+                'imported_ff_id' => $this->isAlreadyImported($item),
             ];
         }
         return $forms;
