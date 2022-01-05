@@ -537,26 +537,60 @@ class CalderaMigrator extends BaseMigrator
         return $form['name'];
     }
 
-    public function getEntries($formId){
+    public function getEntries($formId)
+    {
 
         $form = \Caldera_Forms::get_form($formId);
-        $data = \Caldera_Forms_Admin::get_entries( $form, 1, 999 );
+        $data = \Caldera_Forms_Admin::get_entries($form, 1, 999);
+        $nameKeyMap = $this->getFieldsNameMap($form);
         $entries = [];
-        if(!is_array(ArrayHelper::get($data,'entries'))){
+        if (!is_array(ArrayHelper::get($data, 'entries'))) {
             return $entries;
         }
-        foreach ($data['entries'] as $entry){
+        foreach ($data['entries'] as $entry) {
 
-            $entryId =  ArrayHelper::get($entry,'_entry_id');
-            $entryFields = ArrayHelper::get(\Caldera_Forms::get_entry( $entryId, $form ) , 'data');
+            $entryId = ArrayHelper::get($entry, '_entry_id');
+            $entryFields = ArrayHelper::get(\Caldera_Forms::get_entry($entryId, $form), 'data');
             $formattedEntry = [];
-            foreach ($entryFields as $key => $field){
-                $formattedEntry[$key] = $field['value'];
+
+
+            foreach ($entryFields as $key => $field) {
+                $value = $field['value'];
+                if (is_array($value)) {
+                    $selectedOption = array_pop($value);
+                    $value = \json_decode($selectedOption, true);
+                    $value = array_keys($value);
+                }
+                $inputName = $nameKeyMap[$key];
+                $formattedEntry[$inputName] = $value;
             }
+
             $entries[] = $formattedEntry;
 
         }
-        return  $entries;
+
+        return $entries;
+    }
+
+    /**
+     * Map Field key with its name to insert entry with input name
+     *
+     * @param array|null $form
+     * @return array|mixed
+     */
+    public function getFieldsNameMap(?array $form)
+    {
+        $fields = \Caldera_Forms_Forms::get_fields($form);
+        $map = [];
+
+        if (is_array($fields) && !empty($fields)) {
+
+            foreach ($fields as $key => $field) {
+                $map[$key] = $field['slug'];
+            }
+        }
+        return $map;
+
     }
 
 }

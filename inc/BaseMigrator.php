@@ -93,7 +93,6 @@ abstract class BaseMigrator
                     'form_type'        => $this->key,
                 ];
 
-
             }
             $msg = '';
             if (count($failed) > 0) {
@@ -1560,7 +1559,6 @@ abstract class BaseMigrator
         $this->resetEntries($fluentFormId);
 
         foreach ($entries as $key => $entry) {
-            vdd($entry);
             if (empty($entry)) {
                 continue;
             }
@@ -1574,7 +1572,6 @@ abstract class BaseMigrator
             if ($previousItem) {
                 $serialNumber = $previousItem->serial_number + 1;
             }
-
             $insertData = [
                 'form_id'       => $fluentFormId,
                 'serial_number' => $serialNumber,
@@ -1595,11 +1592,10 @@ abstract class BaseMigrator
             $entries = new \FluentForm\App\Modules\Entries\Entries();
             $entries->recordEntryDetails($insertId, $fluentFormId, $entry);
 
-            wp_send_json([
-                'message' => __("Entries Imported Successfully",'')
-            ], 200);
-
         }
+        wp_send_json([
+            'message' => __("Entries Imported Successfully",'')
+        ], 200);
 
     }
 

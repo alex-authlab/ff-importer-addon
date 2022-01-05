@@ -57,7 +57,6 @@ Class Bootstrap
         $this->loadFiles();
 
         ob_start();
-//        vdd(get_option('__ff_imorted_forms_map'));
         ?>
         <style>
 
@@ -149,7 +148,14 @@ Class Bootstrap
                                     <li>
                                         <div><?php echo $form['name']?> </div>
 
+
+
                                         <div>
+                                            <?php if ($form['imported_ff_id']){?>
+                                                <button data-imported_ff_id="<?php echo $form['imported_ff_id'] ?>" data-form_id="<?php echo $form['id']?>" data-form_type="<?php echo $link['key']?>" type="button" class="el-button el-button--primary el-button--mini import-entry">
+                                                    <?php _e(' Import Entries','') ?>
+                                                </button>
+                                            <?php }?>
 
                                             <button data-form_id="<?php echo $form['id']?>" data-form_type="<?php echo $link['key']?>" type="button" class="el-button el-button--success el-button--mini import-single-form">
                                                 <?php if ($form['imported_ff_id']){ echo ' <i class="el-icon-check"></i>'; }  ?>
