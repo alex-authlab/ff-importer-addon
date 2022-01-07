@@ -15,7 +15,7 @@ jQuery(document).ready(function ($) {
             .done(function (response) {
                 handleSuccess(response, $(this))
                 setTimeout(() => {
-                    // window.location.reload();
+                    window.location.reload();
                 }, 1500);
             })
             .fail(function (xhr, status, error) {
@@ -36,7 +36,7 @@ jQuery(document).ready(function ($) {
             .done(function (response) {
                 handleSuccess(response ,$(this))
                 setTimeout(() => {
-                    // window.location.reload();
+                    window.location.reload();
                 }, 1500);
             })
             .fail(function (xhr, status, error) {
