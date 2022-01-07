@@ -58,7 +58,7 @@ class GravityFormsMigrator extends BaseMigrator
             $returnData['stepsWrapper'] = $this->getStepWrapper();
         }
 
-        return json_encode($returnData);
+        return $returnData;
     }
 
     private function formatFieldData(array $field)
@@ -574,10 +574,31 @@ class GravityFormsMigrator extends BaseMigrator
         ];
     }
 
+    public function getFormsFormatted()
+    {
+        $forms = [];
+        $items = $this->getForms();
+        foreach ($items as $item) {
+            $forms[] = [
+                'name'           => $this->getFormName($item),
+                'id'             => $this->getFormId($item),
+                'imported_ff_id' => $this->isAlreadyImported($item),
+            ];
+        }
+        return $forms;
+    }
+
     protected function getForms()
     {
-        $forms = GFAPI::get_forms();
+        $forms = \GFAPI::get_forms();
         return $forms;
+    }
+    protected function getForm($id)
+    {
+        if($form = \GFAPI::get_form($id)){
+            return $form;
+        }
+        return false;
     }
 
     protected function getFormName($form)
@@ -591,7 +612,7 @@ class GravityFormsMigrator extends BaseMigrator
      */
     protected function getFormId($form)
     {
-        return $form['ID'];
+        return $form['id'];
     }
 
 }

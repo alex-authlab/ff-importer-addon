@@ -15,7 +15,7 @@ jQuery(document).ready(function ($) {
             .done(function (response) {
                 handleSuccess(response, $(this))
                 setTimeout(() => {
-                    window.location.reload();
+                    // window.location.reload();
                 }, 1500);
             })
             .fail(function (xhr, status, error) {
@@ -36,7 +36,7 @@ jQuery(document).ready(function ($) {
             .done(function (response) {
                 handleSuccess(response ,$(this))
                 setTimeout(() => {
-                    window.location.reload();
+                    // window.location.reload();
                 }, 1500);
             })
             .fail(function (xhr, status, error) {
@@ -76,22 +76,23 @@ jQuery(document).ready(function ($) {
             style: 'border:1px solid green; padding:10px;margin: 10px 0',
             html: res.message
         });
-        console.log(text);
-        console.log(res);
         $('.ff-m-response').html(text);
         let inserted_forms = res.inserted_forms;
-        let html = '<table class="widefat " >';
-        $.each(inserted_forms, function (index, value) {
 
-            html += '<tr>';
-            var insertedFormLink = `View Form : <a class="el-button el-button--success el-button--mini" href="${value.edit_url}" />${value.title} </a>`;
-            html += `<td>${insertedFormLink}</td>`;
-            html += `<td> ID : ${index}</td>`;
-            html += '</tr>';
-        });
-        html += '</table>';
+        if(inserted_forms){
+            let html = '<table class="widefat " >';
+            $.each(inserted_forms, function (index, value) {
 
-        $('.ff-m-response').append(html)
+                html += '<tr>';
+                var insertedFormLink = `View Form : <a class="el-button el-button--success el-button--mini" href="${value.edit_url}" />${value.title} </a>`;
+                html += `<td>${insertedFormLink}</td>`;
+                html += `<td> ID : ${index}</td>`;
+                html += '</tr>';
+            });
+            html += '</table>';
+            $('.ff-m-response').append(html)
+        }
+
 
     }
 

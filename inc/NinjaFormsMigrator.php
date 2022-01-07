@@ -46,6 +46,22 @@ class NinjaFormsMigrator extends BaseMigrator
         }
         return $forms;
     }
+
+    public function getForm($id)
+    {
+        $formModel = \Ninja_Forms()->form( $id )->get();
+        if(!$formModel){
+            return [];
+        }
+        $forms = $this->getForms();
+        $formArray = array_filter($forms, function ($form) use ($id) {
+            if($form['ID'] == $id){
+                return $form;
+            }
+        });
+        return  array_shift($formArray);
+    }
+
     public function getFormsFormatted()
     {
         $forms = [];
@@ -83,12 +99,14 @@ class NinjaFormsMigrator extends BaseMigrator
             'label' => $field['label'],
             'class' => $field['element_class'],
         ]);
-
+        if(empty($fluentFields)){
+            return false;
+        }
         $returnData = [
             'fields' => $fluentFields,
             'submitButton' => $this->submitBtn
         ];
-        return json_encode($returnData);
+        return $returnData;
     }
 
     /**
@@ -102,17 +120,21 @@ class NinjaFormsMigrator extends BaseMigrator
         $type = ArrayHelper::get($this->fieldTypes(), $field['type'], '');
 
         $args = [
-            'uniqElKey' => $field['key'],
+            'uniqElKey' => $field['key'].'-'.time(),
             'index' => $field['order'],
             'required' => ArrayHelper::isTrue($field, 'required'),
             'label' => $field['label'],
-            'name' => ArrayHelper::get($field, 'key', $type . '-' . uniqid()),
+            'name' => ArrayHelper::get($field, 'key'),
             'placeholder' => ArrayHelper::get($field, 'placeholder', ''),
             'class' => ArrayHelper::get($field, 'element_class', ''),
             'value' => $this->dynamicShortcodeConverter(ArrayHelper::get($field, 'value', '')),
             'help_message' => ArrayHelper::get($field, 'desc_text'),
             'container_class' => ArrayHelper::get($field, 'container_class'),
         ];
+        if(empty($args['name'])){
+            $name = ArrayHelper::get($field,'id');
+            $args['name'] = str_replace('.','_',$name);
+        }
 
 
         switch ($type) {
@@ -515,4 +537,55 @@ class NinjaFormsMigrator extends BaseMigrator
     {
         return $form['name'];
     }
+
+    public function getEntries($formId)
+    {
+
+        $form = $this->getForm($formId);
+        if(empty($form) ){
+            return false;
+        }
+
+        $submissions = \Ninja_Forms()->form( $formId )->get_subs();
+        $entries = [];
+        $fieldsMap = $this->getFieldKeyMaps($form);
+
+        foreach ($submissions as $submission){
+            $values = $submission->get_field_values();
+            $values  = ArrayHelper::only($values,$fieldsMap);
+            $values = $this->formatEntries($values);
+            $entries[] = $values;
+        }
+        return $entries;
+    }
+
+    public function getFieldKeyMaps($form)
+    {
+        $fields = ArrayHelper::get($form,'fields');
+        $fieldsMap = [];
+        foreach ($fields as $field){
+            $fieldsMap[] = $field['key'];
+        }
+        return $fieldsMap;
+    }
+
+    /**
+     * @param array $values
+     * @return array
+     */
+    public function formatEntries(array $values)
+    {
+        $formattedData = [];
+        foreach ($values as $key => $value){
+            $key = str_replace('.', '_', $key);
+            $value = maybe_unserialize($value);
+            $formattedData[$key] = $value;
+            if(is_array($value)){
+                $value = $this->formatEntries($value);
+            }
+        }
+        return  $formattedData;
+
+    }
+
 }

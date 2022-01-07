@@ -82,7 +82,7 @@ class CalderaMigrator extends BaseMigrator
             $returnData['stepsWrapper'] = $this->getStepWrapper();
         }
 
-        return json_encode($returnData);
+        return $returnData;
     } 
 
     private function formatFieldData($field ,$form)

@@ -62,21 +62,21 @@ abstract class BaseMigrator
         if ($forms && is_array($forms)) {
             foreach ($forms as $formItem) {
                 if ($this->getFields($formItem)) {
-                    $formFields = $this->getFields($formItem);
+                    $formFields = json_encode($this->getFields($formItem));
                 } else {
                     $failed[] = $this->getFormName($formItem);
                     continue;
                 }
                 $form = [
-                    'title'       => $this->getFormName($formItem),
-                    'form_fields' => $formFields,
-                    'status'      => 'published',
-                    'has_payment' => 0,
-                    'type'        => 'form',
-                    'created_by'  => get_current_user_id()
+                    'title'               => $this->getFormName($formItem),
+                    'form_fields'         => $formFields,
+                    'status'              => 'published',
+                    'has_payment'         => 0,
+                    'type'                => 'form',
+                    'created_by'          => get_current_user_id(),
+                    'conditions'          => '',
+                    'appearance_settings' => ''
                 ];
-                $form['conditions'] = ''; //todo
-                $form['appearance_settings'] = ''; //todo
 
                 if ($formId = $this->isAlreadyImported($formItem)) {
                     $insertedForms = $this->updateForm($formId, $formFields, $insertedForms);

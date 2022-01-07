@@ -32,7 +32,7 @@ Class Bootstrap
 
         if ((new CalderaMigrator())->exist()) {
             $migratorLinks[] = [
-                'name' => 'Import Caldera Forms',
+                'name' => 'Caldera Forms',
                 'key' => 'caldera',
                 'forms' => (new CalderaMigrator())->getFormsFormatted()
 
@@ -40,16 +40,16 @@ Class Bootstrap
         }
         if ((new NinjaFormsMigrator())->exist()) {
             $migratorLinks[] = [
-                'name' => 'Import Ninja Forms',
+                'name' => 'Ninja Forms',
                 'key' => 'ninja_forms',
                 'forms' => (new NinjaFormsMigrator())->getFormsFormatted()
             ];
         }
         if ((new GravityFormsMigrator())->exist()) {
             $migratorLinks[] = [
-                'name' => 'Import Gravity Forms',
+                'name' => 'Gravity Forms',
                 'key' => 'gravityform',
-                'forms' => []
+                'forms' => (new GravityFormsMigrator())->getFormsFormatted()
 
             ];
         }
@@ -110,12 +110,12 @@ Class Bootstrap
                 list-style: none;
                 flex-direction:column;
                 padding-left: 0;
+                margin: 0;
                 text-align:center;
             }
 
             .ff-mig-addon-tabs-content ul li{
                 width:100%;
-                margin: 10px 5px;
                 padding: 10px 5px;
                 box-sizing: border-box;
                 justify-content: space-between;flex-direction: row;
@@ -132,7 +132,7 @@ Class Bootstrap
             <div class="ff-mig-addon-tabs-nav">
                 <ul>
                     <?php foreach ($migratorLinks as $link): ?>
-                        <li class="ff-mig-addon-tabs-nav-a active"><a href="#<?php echo $link['key'] ?>"><?php echo $link['name'] ?></a></li>
+                        <li class="ff-mig-addon-tabs-nav-a "><a href="#<?php echo $link['key'] ?>"><?php echo $link['name'] ?></a></li>
                     <?php endforeach; ?>
                 </ul>
             </div>
@@ -151,11 +151,15 @@ Class Bootstrap
 
 
                                         <div>
-                                            <?php if ($form['imported_ff_id']){?>
+                                            <?php if ($form['imported_ff_id']){
+                                                $skipEntryImport = ['gravityform','ninja_forms'];
+                                                if(!in_array($link['key'],$skipEntryImport)){
+                                                ?>
                                                 <button data-imported_ff_id="<?php echo $form['imported_ff_id'] ?>" data-form_id="<?php echo $form['id']?>" data-form_type="<?php echo $link['key']?>" type="button" class="el-button el-button--primary el-button--mini import-entry">
                                                     <?php _e(' Import Entries','') ?>
                                                 </button>
-                                            <?php }?>
+                                            <?php }
+                                            }?>
 
                                             <button data-form_id="<?php echo $form['id']?>" data-form_type="<?php echo $link['key']?>" type="button" class="el-button el-button--success el-button--mini import-single-form">
                                                 <?php if ($form['imported_ff_id']){ echo ' <i class="el-icon-check"></i>'; }  ?>
